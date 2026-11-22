@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kontakte – Android</title>
+  <link rel="stylesheet" href="system.css">
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <header class="app-topbar">
+      <div class="app-title-group">
+        <a href="start.html" class="icon-btn" title="Startbildschirm">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </a>
+        <div>
+          <h1 style="font-size:22px;font-weight:700;">Kontakte</h1>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Personen & Schnellwahl</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <div class="m3-card" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+        <input type="text" id="c-name" class="m3-input" style="flex:2;min-width:160px;" placeholder="Name">
+        <input type="text" id="c-role" class="m3-input" style="flex:1;min-width:130px;" placeholder="Notiz / Gruppe">
+        <input type="tel" id="c-phone" class="m3-input" style="flex:1;min-width:150px;" placeholder="Telefonnummer">
+        <button class="m3-btn" onclick="addContact()">
+          <span class="material-symbols-rounded" style="font-size:18px;">person_add</span>
+          <span>Hinzufügen</span>
+        </button>
+      </div>
+
+      <div id="contact-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+
+    function addContact() {
+      const name = document.getElementById('c-name').value.trim();
+      const role = document.getElementById('c-role').value.trim() || 'Kontakt';
+      const phone = document.getElementById('c-phone').value.trim() || 'Keine Nummer';
+      if (!name) return;
+      AndroidOS.updateState(s => {
+        s.contacts.unshift({ id: 'p_' + Date.now(), name, role, phone, color: '#0061A4' });
+      });
+      document.getElementById('c-name').value = '';
+      document.getElementById('c-role').value = '';
+      document.getElementById('c-phone').value = '';
+      renderContacts();
+    }
+
+    function removeContact(id) {
+      AndroidOS.updateState(s => {
+        s.contacts = s.contacts.filter(c => c.id !== id);
+      });
+      renderContacts();
+    }
+
+    function renderContacts() {
+      const list = AndroidOS.getState().contacts || [];
+      document.getElementById('contact-list').innerHTML = list.map(c => `
+        <div class="m3-card-filled" style="display:flex;justify-content:space-between;align-items:center;gap:14px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:46px;height:46px;border-radius:999px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;">
+              ${c.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:16px;">${c.name}</div>
+              <div style="font-size:13px;color:var(--md-sys-color-on-surface-variant);">${c.role} · ${c.phone}</div>
+            </div>
+          </div>
+          <button class="icon-btn" onclick="removeContact('${c.id}')">
+            <span class="material-symbols-rounded">delete</span>
+          </button>
+        </div>
+      `).join('');
+    }
+    renderContacts();
+  </script>
+</body>
+</html>

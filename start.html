@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Start – Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .home-wrap {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 18px 24px 84px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .glance-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .at-a-glance {
+      padding: 8px 6px;
+    }
+    .at-a-glance h1 {
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .at-a-glance-sub {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    .home-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      padding: 0 4px;
+    }
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap: 20px 14px;
+      margin-top: 14px;
+    }
+    .app-grid.alpha-list {
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 10px;
+    }
+    .app-grid.alpha-list .app-icon-link {
+      flex-direction: row;
+      justify-content: flex-start;
+      padding: 10px 14px;
+      border-radius: 20px;
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      gap: 14px;
+    }
+    .app-grid.alpha-list .app-squircle {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      box-shadow: none;
+    }
+    .app-grid.alpha-list .app-squircle .material-symbols-rounded {
+      font-size: 22px;
+    }
+    .app-grid.alpha-list .app-label {
+      text-align: left;
+      font-size: 14px;
+    }
+    .app-icon-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--md-sys-color-on-surface);
+      transition: transform 0.18s ease, background 0.15s ease;
+    }
+    .app-icon-link:hover {
+      transform: translateY(-3px);
+    }
+    .app-icon-link:active {
+      transform: scale(0.94);
+    }
+    .app-squircle {
+      width: 64px;
+      height: 64px;
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    .app-squircle .material-symbols-rounded {
+      font-size: 31px;
+    }
+    .app-label {
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .customize-panel {
+      display: none;
+      margin-top: 12px;
+    }
+    .customize-panel.open {
+      display: block;
+    }
+    .search-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      background: var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface-variant);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .dock-bar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 30px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline-variant);
+    }
+    .secret-lab {
+      display: none;
+      margin-top: 14px;
+      border: 1px dashed var(--md-sys-color-primary);
+    }
+    .secret-lab.open {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <main class="home-wrap">
+      <div>
+        <div class="glance-row">
+          <div class="at-a-glance">
+            <h1 id="glance-date"></h1>
+            <a href="wetter.html" class="at-a-glance-sub" style="text-decoration:none;">
+              <span class="material-symbols-rounded filled" style="color:var(--md-sys-color-primary);font-size:20px;">partly_cloudy_day</span>
+              <span id="glance-weather">16 °C · Partly cloudy</span>
+            </a>
+          </div>
+          <button type="button" class="icon-btn" onclick="toggleCustomize()" title="Startbildschirm anpassen" aria-label="Startbildschirm anpassen">
+            <span class="material-symbols-rounded">tune</span>
+          </button>
+        </div>
+
+        <div class="m3-card customize-panel" id="customize-panel">
+          <div style="font-weight:700;font-size:15px;margin-bottom:10px;">Startbildschirm anpassen</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+            <button type="button" class="m3-chip" id="chip-alpha-sort" onclick="toggleAlphaSort()">
+              <span class="material-symbols-rounded" style="font-size:16px;">sort_by_alpha</span>
+              <span>Alphabetisch sortieren</span>
+            </button>
+            <button type="button" class="m3-chip" id="chip-alpha-list" onclick="toggleAlphaView()">
+              <span class="material-symbols-rounded" style="font-size:16px;">format_list_bulleted</span>
+              <span>Alphabetische Appliste</span>
+            </button>
+            <button type="button" class="m3-chip" id="chip-show-weather" onclick="toggleGlanceWeather()">
+              <span class="material-symbols-rounded" style="font-size:16px;">partly_cloudy_day</span>
+              <span>Wetter anzeigen</span>
+            </button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="custom-greeting" class="m3-input" style="flex:1;min-width:200px;" placeholder="Eigene Überschrift / Gruß (optional)">
+            <button type="button" class="m3-btn m3-btn-tonal" onclick="saveGreeting()">Übernehmen</button>
+          </div>
+        </div>
+
+        <div class="home-toolbar">
+          <span style="font-size:12px;font-weight:700;color:var(--md-sys-color-on-surface-variant);" id="apps-count-label">Apps</span>
+          <button type="button" class="m3-chip" id="quick-alpha-btn" onclick="toggleAlphaView()">
+            <span class="material-symbols-rounded" style="font-size:16px;">sort_by_alpha</span>
+            <span id="quick-alpha-text">Appliste A–Z</span>
+          </button>
+        </div>
+
+        <div class="app-grid" id="app-grid"></div>
+
+        <!-- Easter Egg #2 hidden panel -->
+        <div class="m3-card secret-lab" id="secret-lab">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="font-weight:700;font-size:15px;color:var(--md-sys-color-primary);">
+              Easter Egg #2 · Android 16 Secret Lab
+            </div>
+            <button type="button" class="icon-btn" onclick="closeSecretLab()" title="Schließen">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+          <div style="font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-bottom:10px;" id="secret-stats"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="m3-btn m3-btn-tonal" onclick="randomSurpriseTheme()">Zufalls-Theme aktivieren</button>
+            <a href="game-2048.html" class="m3-btn m3-btn-tonal">2048 starten</a>
+            <a href="game-sudoku.html" class="m3-btn m3-btn-tonal">Sudoku starten</a>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <a href="kontakte.html" class="search-pill" id="home-search-pill">
+          <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">search</span>
+          <span id="search-label">Search apps, contacts, notes…</span>
+        </a>
+
+        <div class="dock-bar">
+          <a href="kontakte.html" class="app-icon-link" title="Contacts">
+            <div class="app-squircle" style="width:52px;height:52px;border-radius:18px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);">
+              <span class="material-symbols-rounded filled" style="font-size:25px;">call</span>
+            </div>
+          </a>
+          <a href="aufgaben.html" class="app-icon-link" title="Tasks">
+            <div class="app-squircle" style="width:52px;height:52px;border-radius:18px;background:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container);">
+              <span class="material-symbols-rounded filled" style="font-size:25px;">task_alt</span>
+            </div>
+          </a>
+          <a href="kamera.html" class="app-icon-link" title="Camera">
+            <div class="app-squircle" style="width:52px;height:52px;border-radius:18px;background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);">
+              <span class="material-symbols-rounded filled" style="font-size:25px;">photo_camera</span>
+            </div>
+          </a>
+          <a href="uhr.html" class="app-icon-link" title="Clock">
+            <div class="app-squircle" style="width:52px;height:52px;border-radius:18px;background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);">
+              <span class="material-symbols-rounded filled" style="font-size:25px;">timer</span>
+            </div>
+          </a>
+          <a href="einstellungen.html" class="app-icon-link" title="Settings">
+            <div class="app-squircle" style="width:52px;height:52px;border-radius:18px;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface);">
+              <span class="material-symbols-rounded filled" style="font-size:25px;">settings</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+
+    const APP_NAMES = {
+      de: { clock: 'Uhr', calc: 'Rechner', notes: 'Notizen', tasks: 'Aufgaben', converter: 'Umrechner', weather: 'Wetter', calendar: 'Kalender', gallery: 'Galerie', camera: 'Kamera', music: 'Musik', contacts: 'Kontakte', settings: 'Einstellungen', weatherSub: '16 °C · Teils bewölkt', search: 'Apps, Kontakte & Notizen suchen…' },
+      en: { clock: 'Clock', calc: 'Calculator', notes: 'Notes', tasks: 'Tasks', converter: 'Converter', weather: 'Weather', calendar: 'Calendar', gallery: 'Gallery', camera: 'Camera', music: 'Music', contacts: 'Contacts', settings: 'Settings', weatherSub: '16 °C · Partly cloudy', search: 'Search apps, contacts & notes…' },
+      fr: { clock: 'Horloge', calc: 'Calculatrice', notes: 'Notes', tasks: 'Tâches', converter: 'Convertisseur', weather: 'Météo', calendar: 'Agenda', gallery: 'Galerie', camera: 'Caméra', music: 'Musique', contacts: 'Contacts', settings: 'Paramètres', weatherSub: '16 °C · Nuageux', search: 'Rechercher apps, contacts, notes…' },
+      es: { clock: 'Reloj', calc: 'Calculadora', notes: 'Notas', tasks: 'Tareas', converter: 'Conversor', weather: 'Clima', calendar: 'Calendario', gallery: 'Galería', camera: 'Cámara', music: 'Música', contacts: 'Contactos', settings: 'Ajustes', weatherSub: '16 °C · Parcialmente nublado', search: 'Buscar apps, contactos y notas…' },
+      ja: { clock: '時計', calc: '電卓', notes: 'メモ', tasks: 'タスク', converter: '単位変換', weather: '天気', calendar: 'カレンダー', gallery: 'ギャラリー', camera: 'カメラ', music: '音楽', contacts: '連絡先', settings: '設定', weatherSub: '16 °C · 晴れ時々くもり', search: 'アプリ・連絡先・メモを検索…' }
+    };
+
+    const APPS = [
+      { key: 'clock', href: 'uhr.html', fallback: 'Uhr', icon: 'schedule', bg: 'var(--md-sys-color-primary)', fg: 'var(--md-sys-color-on-primary)' },
+      { key: 'calc', href: 'rechner.html', fallback: 'Rechner', icon: 'calculate', bg: 'var(--md-sys-color-secondary-container)', fg: 'var(--md-sys-color-on-secondary-container)' },
+      { key: 'notes', href: 'notizen.html', fallback: 'Notizen', icon: 'edit_note', bg: 'var(--md-sys-color-primary-container)', fg: 'var(--md-sys-color-on-primary-container)' },
+      { key: 'tasks', href: 'aufgaben.html', fallback: 'Aufgaben', icon: 'task_alt', bg: 'var(--md-sys-color-tertiary-container)', fg: 'var(--md-sys-color-on-tertiary-container)' },
+      { key: 'converter', href: 'umrechner.html', fallback: 'Umrechner', icon: 'straighten', bg: 'var(--md-sys-color-secondary-container)', fg: 'var(--md-sys-color-on-secondary-container)' },
+      { key: 'weather', href: 'wetter.html', fallback: 'Wetter', icon: 'partly_cloudy_day', bg: 'var(--md-sys-color-primary-container)', fg: 'var(--md-sys-color-on-primary-container)' },
+      { key: 'calendar', href: 'kalender.html', fallback: 'Kalender', icon: 'calendar_month', bg: 'var(--md-sys-color-tertiary-container)', fg: 'var(--md-sys-color-on-tertiary-container)' },
+      { key: 'gallery', href: 'galerie.html', fallback: 'Galerie', icon: 'photo_library', bg: 'var(--md-sys-color-secondary-container)', fg: 'var(--md-sys-color-on-secondary-container)' },
+      { key: 'camera', href: 'kamera.html', fallback: 'Kamera', icon: 'photo_camera', bg: 'var(--md-sys-color-primary-container)', fg: 'var(--md-sys-color-on-primary-container)' },
+      { key: 'music', href: 'musik.html', fallback: 'Musik', icon: 'music_note', bg: 'var(--md-sys-color-tertiary-container)', fg: 'var(--md-sys-color-on-tertiary-container)' },
+      { key: 'contacts', href: 'kontakte.html', fallback: 'Kontakte', icon: 'contacts', bg: 'var(--md-sys-color-secondary-container)', fg: 'var(--md-sys-color-on-secondary-container)' },
+      { key: 'google', href: 'google.html', fallback: 'Google', icon: 'search', bg: '#D1E4FF', fg: '#001D36' },
+      { key: 'gemini', href: 'gemini.html', fallback: 'Gemini', icon: 'auto_awesome', bg: '#E8DEF8', fg: '#1D192B' },
+      { key: 'quake', href: 'erdbeben.html', fallback: 'Erdbeben', icon: 'vibration', bg: '#FFDAD6', fg: '#410002' },
+      { key: 'error', href: 'error.html', fallback: 'Fehler', icon: 'error', bg: '#FFEDEA', fg: '#991B1B' },
+      { key: 'settings', href: 'einstellungen.html', fallback: 'Einstellungen', icon: 'settings', bg: 'var(--md-sys-color-surface-container-highest)', fg: 'var(--md-sys-color-on-surface)' }
+    ];
+
+    function toggleCustomize() {
+      document.getElementById('customize-panel').classList.toggle('open');
+    }
+
+    function toggleAlphaSort() {
+      AndroidOS.updateState(s => { s.launcherAlphaSort = !s.launcherAlphaSort; });
+  
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+      if (href.startsWith('lockscreen.html') || href.startsWith('bootscreen.html')) return;
+      const curState = AndroidOS.getState();
+      if (curState.locked || !AndroidOS.isUnlockedRecently(curState)) {
+        e.preventDefault();
+        window.location.href = `lockscreen.html?next=${encodeURIComponent(href)}`;
+      }
+    });
+
+    renderHome();
+    }
+
+    function toggleAlphaView() {
+      AndroidOS.updateState(s => {
+        s.launcherAlphaList = !s.launcherAlphaList;
+        if (s.launcherAlphaList) s.launcherAlphaSort = true;
+      });
+      renderHome();
+    }
+
+    function toggleGlanceWeather() {
+      AndroidOS.updateState(s => {
+        s.launcherHideWeather = !s.launcherHideWeather;
+      });
+      renderHome();
+    }
+
+    function saveGreeting() {
+      const val = document.getElementById('custom-greeting').value.trim();
+      AndroidOS.updateState(s => { s.launcherCustomGreeting = val; });
+      renderHome();
+    }
+
+    function renderHome() {
+      const st = AndroidOS.getState();
+      const lang = AndroidOS.getLang(st);
+      const labels = APP_NAMES[lang] || APP_NAMES.de;
+      const locale = (AndroidOS.I18N[lang] || AndroidOS.I18N.de).locale;
+
+      const headingEl = document.getElementById('glance-date');
+      headingEl.textContent = st.launcherCustomGreeting
+        ? st.launcherCustomGreeting
+        : AndroidOS.formatDate(new Date(), st);
+
+      const weatherLink = document.getElementById('glance-weather').parentElement;
+      weatherLink.style.display = st.launcherHideWeather ? 'none' : 'flex';
+      document.getElementById('glance-weather').textContent = labels.weatherSub;
+      document.getElementById('search-label').textContent = labels.search;
+
+      if (document.activeElement !== document.getElementById('custom-greeting')) {
+        document.getElementById('custom-greeting').value = st.launcherCustomGreeting || '';
+      }
+
+      const alphaSort = !!st.launcherAlphaSort;
+      const alphaList = !!st.launcherAlphaList;
+
+      document.getElementById('chip-alpha-sort').classList.toggle('active', alphaSort);
+      document.getElementById('chip-alpha-list').classList.toggle('active', alphaList);
+      document.getElementById('chip-show-weather').classList.toggle('active', !st.launcherHideWeather);
+      document.getElementById('quick-alpha-btn').classList.toggle('active', alphaList);
+      document.getElementById('quick-alpha-text').textContent = alphaList ? 'Rasteransicht' : 'Appliste A–Z';
+
+      const items = APPS.map(a => ({
+        ...a,
+        title: labels[a.key] || a.fallback
+      }));
+
+      if (alphaSort || alphaList) {
+        items.sort((a, b) => a.title.localeCompare(b.title, locale, { sensitivity: 'base' }));
+      }
+
+      document.getElementById('apps-count-label').textContent = alphaList
+        ? `Alphabetische Appliste (${items.length} Apps)`
+        : `Apps (${items.length})`;
+
+      const grid = document.getElementById('app-grid');
+      grid.classList.toggle('alpha-list', alphaList);
+      grid.innerHTML = items.map(item => `
+        <a href="${item.href}" class="app-icon-link">
+          <div class="app-squircle" style="background:${item.bg};color:${item.fg};">
+            <span class="material-symbols-rounded filled">${item.icon}</span>
+          </div>
+          <span class="app-label">${item.title}</span>
+        </a>
+      `).join('');
+    }
+
+    // Easter Egg #2: Type "1616" on keyboard or click search pill 5 times
+    let keyBuffer = '';
+    let searchClicks = 0;
+
+    function openSecretLab() {
+      const panel = document.getElementById('secret-lab');
+      const st = AndroidOS.getState();
+      const bat = AndroidOS.getBatteryInfo(st);
+      document.getElementById('secret-stats').textContent =
+        `Gerät: ${st.deviceName || 'Pixel 10'} · Theme: ${st.theme} (${st.mode}) · Akku: ${bat.level}% · Termine: ${(st.calendarEvents || []).length}`;
+      panel.classList.add('open');
+      AndroidOS.showToast('Easter Egg #2 entdeckt: Android 16 Secret Lab!');
+    }
+
+    function closeSecretLab() {
+      document.getElementById('secret-lab').classList.remove('open');
+    }
+
+    function randomSurpriseTheme() {
+      const themes = ['ocean', 'forest', 'violet', 'amber', 'rose', 'citrus', 'slate', 'mono', 'sunset', 'lagoon', 'berry', 'sandstone'];
+      const pick = themes[Math.floor(Math.random() * themes.length)];
+      AndroidOS.updateState(s => { s.theme = pick; });
+      AndroidOS.showToast(`Neues Theme: ${pick}`);
+      renderHome();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+      if (e.key.length === 1) {
+        keyBuffer = (keyBuffer + e.key).slice(-4);
+        if (keyBuffer === '1616') {
+          keyBuffer = '';
+          openSecretLab();
+        }
+      }
+    });
+
+    document.getElementById('home-search-pill').addEventListener('click', (e) => {
+      searchClicks++;
+      if (searchClicks >= 5) {
+        e.preventDefault();
+        searchClicks = 0;
+        openSecretLab();
+      }
+    });
+
+    renderHome();
+  </script>
+</body>
+</html>

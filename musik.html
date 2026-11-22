@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Musik – Android</title>
+  <link rel="stylesheet" href="system.css">
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <header class="app-topbar">
+      <div class="app-title-group">
+        <a href="start.html" class="icon-btn" title="Startbildschirm">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </a>
+        <div>
+          <h1 style="font-size:22px;font-weight:700;">Musik</h1>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Audio-Player & Fokus-Sounds</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main" style="max-width:640px;">
+      <div class="m3-card-filled" style="text-align:center;padding:32px 24px;margin-bottom:18px;">
+        <div style="width:96px;height:96px;border-radius:28px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <span class="material-symbols-rounded filled" style="font-size:48px;">album</span>
+        </div>
+        <h2 id="track-title" style="font-size:22px;margin-bottom:4px;">Deep Focus Ambient</h2>
+        <div id="track-sub" style="font-size:14px;color:var(--md-sys-color-on-surface-variant);margin-bottom:20px;">Synthesizer · 80 BPM</div>
+
+        <div style="display:flex;justify-content:center;align-items:center;gap:16px;">
+          <button class="icon-btn" onclick="prevTrack()">
+            <span class="material-symbols-rounded">skip_previous</span>
+          </button>
+          <button class="m3-btn" style="width:64px;height:64px;padding:0;" onclick="togglePlay()">
+            <span class="material-symbols-rounded filled" id="play-icon" style="font-size:32px;">play_arrow</span>
+          </button>
+          <button class="icon-btn" onclick="nextTrack()">
+            <span class="material-symbols-rounded">skip_next</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="playlist" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+    const TRACKS = [
+      { title: 'Deep Focus Ambient', sub: 'Synthesizer · 80 BPM', freq: 261.63 },
+      { title: 'Nordhorn Night Drive', sub: 'Lo-Fi Beats · 92 BPM', freq: 293.66 },
+      { title: 'Minimal Piano Study', sub: 'Klavier Solo · 108 BPM', freq: 329.63 }
+    ];
+    let current = 0;
+    let playing = false;
+    let audioCtx = null;
+    let osc = null;
+
+    function stopTone() {
+      if (osc) { try { osc.stop(); } catch (e) {} osc = null; }
+    }
+
+    function startTone() {
+      stopTone();
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtx) audioCtx = new Ctx();
+      osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = TRACKS[current].freq;
+      gain.gain.value = 0.03;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+    }
+
+    function togglePlay() {
+      playing = !playing;
+      document.getElementById('play-icon').textContent = playing ? 'pause' : 'play_arrow';
+      if (playing) startTone(); else stopTone();
+    }
+
+    function selectTrack(i) {
+      current = i;
+      renderPlayer();
+      if (playing) startTone();
+    }
+
+    function nextTrack() { selectTrack((current + 1) % TRACKS.length); }
+    function prevTrack() { selectTrack((current - 1 + TRACKS.length) % TRACKS.length); }
+
+    function renderPlayer() {
+      document.getElementById('track-title').textContent = TRACKS[current].title;
+      document.getElementById('track-sub').textContent = TRACKS[current].sub;
+      document.getElementById('playlist').innerHTML = TRACKS.map((t, idx) => `
+        <div class="m3-card" style="padding:14px 18px;cursor:pointer;border-color:${idx === current ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-outline-variant)'};" onclick="selectTrack(${idx})">
+          <div style="font-weight:700;">${t.title}</div>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">${t.sub}</div>
+        </div>
+      `).join('');
+    }
+    renderPlayer();
+  </script>
+</body>
+</html>

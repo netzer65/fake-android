@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Play – Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .play-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      margin-bottom: 14px;
+    }
+    .play-search input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      outline: none;
+    }
+    .play-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+    }
+    .app-store-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 22px;
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      margin-bottom: 10px;
+    }
+    .app-store-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .store-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .store-meta {
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+    }
+    .install-pill {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .install-pill.installed {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+    .install-pill.available {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <header class="app-topbar">
+      <div class="app-title-group">
+        <a href="start.html" class="icon-btn" title="Start">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </a>
+        <div>
+          <h1 style="font-size:21px;font-weight:600;" id="play-header-title">Google Play</h1>
+        </div>
+      </div>
+      <div class="status-pill" id="play-account-badge">guest.user@example.com</div>
+    </header>
+
+    <main class="app-main">
+      <div class="play-search">
+        <span class="material-symbols-rounded" style="color:var(--md-sys-color-on-surface-variant);">search</span>
+        <input type="search" id="play-search-input" oninput="renderStore()" placeholder="Apps & Spiele suchen">
+      </div>
+
+      <div class="play-tabs" id="play-category-tabs">
+        <button class="m3-chip active" data-cat="all" onclick="setCat('all')" id="tab-all">Alle</button>
+        <button class="m3-chip" data-cat="tools" onclick="setCat('tools')" id="tab-tools">Tools</button>
+        <button class="m3-chip" data-cat="productivity" onclick="setCat('productivity')" id="tab-prod">Produktivität</button>
+        <button class="m3-chip" data-cat="media" onclick="setCat('media')" id="tab-media">Medien</button>
+        <button class="m3-chip" data-cat="games" onclick="setCat('games')" id="tab-games">Spiele</button>
+      </div>
+
+      <div id="play-app-list"></div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+
+    const CATALOG = [
+      { id: 'game-2048.html', title: { de: '2048', en: '2048', fr: '2048', es: '2048', ja: '2048' }, cat: 'games', rating: '4.9', size: '9,4 MB', icon: 'grid_4x4', bg: '#FFDCBE', fg: '#2C1600', target: 'game-2048.html', builtIn: false },
+      { id: 'game-sudoku.html', title: { de: 'Sudoku', en: 'Sudoku', fr: 'Sudoku', es: 'Sudoku', ja: '数独' }, cat: 'games', rating: '4.8', size: '11,0 MB', icon: 'apps', bg: '#EADDFF', fg: '#21005D', target: 'game-sudoku.html', builtIn: false },
+      { id: 'rechner.html', title: { de: 'Rechner', en: 'Calculator', fr: 'Calculatrice', es: 'Calculadora', ja: '電卓' }, cat: 'tools', rating: '4.8', size: '8,4 MB', icon: 'calculate', bg: '#D1E4FF', fg: '#001D36', target: 'rechner.html', builtIn: true },
+      { id: 'uhr.html', title: { de: 'Uhr & Timer', en: 'Clock & Timer', fr: 'Horloge et minuteur', es: 'Reloj y temporizador', ja: '時計とタイマー' }, cat: 'tools', rating: '4.7', size: '11,2 MB', icon: 'alarm', bg: '#F2DAFF', fg: '#251431', target: 'uhr.html', builtIn: true },
+      { id: 'umrechner.html', title: { de: 'Einheitenrechner', en: 'Unit Converter', fr: 'Convertisseur', es: 'Conversor', ja: '単位変換' }, cat: 'tools', rating: '4.6', size: '6,9 MB', icon: 'straighten', bg: '#D7E3F7', fg: '#101C2B', target: 'umrechner.html', builtIn: true },
+      { id: 'notizen.html', title: { de: 'Notizen', en: 'Notes', fr: 'Notes', es: 'Notas', ja: 'メモ' }, cat: 'productivity', rating: '4.9', size: '9,8 MB', icon: 'edit_note', bg: '#FFDCBE', fg: '#2C1600', target: 'notizen.html', builtIn: true },
+      { id: 'aufgaben.html', title: { de: 'Aufgaben', en: 'Tasks', fr: 'Tâches', es: 'Tareas', ja: 'タスク' }, cat: 'productivity', rating: '4.7', size: '7,1 MB', icon: 'check_circle', bg: '#B7E4C7', fg: '#082115', target: 'aufgaben.html', builtIn: true },
+      { id: 'kalender.html', title: { de: 'Kalender', en: 'Calendar', fr: 'Calendrier', es: 'Calendario', ja: 'カレンダー' }, cat: 'productivity', rating: '4.8', size: '12,5 MB', icon: 'calendar_month', bg: '#D1E4FF', fg: '#001D36', target: 'kalender.html', builtIn: true },
+      { id: 'kontakte.html', title: { de: 'Kontakte', en: 'Contacts', fr: 'Contacts', es: 'Contactos', ja: '連絡先' }, cat: 'productivity', rating: '4.5', size: '6,2 MB', icon: 'contacts', bg: '#E8DEF8', fg: '#1D192B', target: 'kontakte.html', builtIn: true },
+      { id: 'wetter.html', title: { de: 'Wetter', en: 'Weather', fr: 'Météo', es: 'Tiempo', ja: '天気' }, cat: 'tools', rating: '4.7', size: '10,1 MB', icon: 'partly_cloudy_day', bg: '#BFE9F7', fg: '#001F28', target: 'wetter.html', builtIn: true },
+      { id: 'galerie.html', title: { de: 'Galerie', en: 'Gallery', fr: 'Galerie', es: 'Galería', ja: 'ギャラリー' }, cat: 'media', rating: '4.6', size: '14,0 MB', icon: 'photo_library', bg: '#FFD8E4', fg: '#31111D', target: 'galerie.html', builtIn: true },
+      { id: 'kamera.html', title: { de: 'Kamera', en: 'Camera', fr: 'Caméra', es: 'Cámara', ja: 'カメラ' }, cat: 'media', rating: '4.5', size: '15,3 MB', icon: 'photo_camera', bg: '#EADDFF', fg: '#21005D', target: 'kamera.html', builtIn: true },
+      { id: 'musik.html', title: { de: 'Musik', en: 'Music', fr: 'Musique', es: 'Música', ja: '音楽' }, cat: 'media', rating: '4.8', size: '13,7 MB', icon: 'music_note', bg: '#DAE8B5', fg: '#161F02', target: 'musik.html', builtIn: true },
+      { id: 'arcade-mini', title: { de: 'Reflex Tap Arcade', en: 'Reflex Tap Arcade', fr: 'Reflex Tap Arcade', es: 'Reflex Tap Arcade', ja: 'リフレックスタップ' }, cat: 'games', rating: '4.9', size: '18,2 MB', icon: 'sports_esports', bg: '#FFDAD6', fg: '#410002', target: 'start.html', builtIn: false }
+    ];
+
+    const PLAY_COPY = {
+      de: { search: 'Apps & Spiele suchen', all: 'Alle', tools: 'Tools', prod: 'Produktivität', media: 'Medien', games: 'Spiele', open: 'Öffnen', install: 'Installieren', installed: 'Installiert' },
+      en: { search: 'Search apps & games', all: 'All', tools: 'Tools', prod: 'Productivity', media: 'Media', games: 'Games', open: 'Open', install: 'Install', installed: 'Installed' },
+      fr: { search: 'Rechercher applis et jeux', all: 'Tout', tools: 'Outils', prod: 'Productivité', media: 'Médias', games: 'Jeux', open: 'Ouvrir', install: 'Installer', installed: 'Installé' },
+      es: { search: 'Buscar apps y juegos', all: 'Todo', tools: 'Herramientas', prod: 'Productividad', media: 'Multimedia', games: 'Juegos', open: 'Abrir', install: 'Instalar', installed: 'Instalado' },
+      ja: { search: 'アプリとゲームを検索', all: 'すべて', tools: 'ツール', prod: '仕事効率化', media: 'メディア', games: 'ゲーム', open: '開く', install: 'インストール', installed: 'インストール済み' }
+    };
+
+    let currentCat = 'all';
+
+    function setCat(cat) {
+      currentCat = cat;
+      document.querySelectorAll('#play-category-tabs .m3-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.cat === cat);
+      });
+      renderStore();
+    }
+
+    function isInstalled(item, st) {
+      if (item.builtIn) return true;
+      const list = Array.isArray(st.installedStoreApps) ? st.installedStoreApps : [];
+      return list.includes(item.id);
+    }
+
+    function toggleInstall(id) {
+      AndroidOS.updateState(s => {
+        const list = Array.isArray(s.installedStoreApps) ? [...s.installedStoreApps] : [];
+        const idx = list.indexOf(id);
+        if (idx >= 0) list.splice(idx, 1);
+        else list.push(id);
+        s.installedStoreApps = list;
+      });
+      renderStore();
+    }
+
+    function renderStore() {
+      const st = AndroidOS.getState();
+      const lang = AndroidOS.getLang(st);
+      const cp = PLAY_COPY[lang] || PLAY_COPY.de;
+      const q = (document.getElementById('play-search-input').value || '').trim().toLowerCase();
+      const ga = st.googleAccount || {};
+
+      document.getElementById('play-header-title').textContent = 'Google Play';
+      document.getElementById('play-account-badge').textContent = ga.email || 'guest.user@example.com';
+      document.getElementById('play-search-input').placeholder = cp.search;
+      document.getElementById('tab-all').textContent = cp.all;
+      document.getElementById('tab-tools').textContent = cp.tools;
+      document.getElementById('tab-prod').textContent = cp.prod;
+      document.getElementById('tab-media').textContent = cp.media;
+      document.getElementById('tab-games').textContent = cp.games;
+
+      const filtered = CATALOG.filter(item => {
+        if (currentCat !== 'all' && item.cat !== currentCat) return false;
+        const title = (item.title[lang] || item.title.de).toLowerCase();
+        return !q || title.includes(q) || item.cat.includes(q);
+      });
+
+      const listEl = document.getElementById('play-app-list');
+      listEl.innerHTML = filtered.map(item => {
+        const name = item.title[lang] || item.title.de;
+        const installed = isInstalled(item, st);
+        const btnLabel = item.builtIn ? cp.open : (installed ? cp.installed : cp.install);
+        const btnClass = item.builtIn ? 'installed' : (installed ? 'installed' : 'available');
+        const action = item.builtIn
+          ? `window.location.href='${item.target}'`
+          : `toggleInstall('${item.id}')`;
+
+        return `
+          <div class="app-store-card">
+            <div class="app-store-left">
+              <div class="store-icon" style="background:${item.bg};color:${item.fg};">
+                <span class="material-symbols-rounded filled" style="font-size:26px;">${item.icon}</span>
+              </div>
+              <div>
+                <div style="font-weight:600;font-size:15px;">${name}</div>
+                <div class="store-meta">
+                  <span>★ ${item.rating}</span>
+                  <span>·</span>
+                  <span>${item.size}</span>
+                </div>
+              </div>
+            </div>
+            <button class="install-pill ${btnClass}" onclick="${action}">${btnLabel}</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderStore();
+  </script>
+</body>
+</html>
