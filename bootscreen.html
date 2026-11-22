@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boot – Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .boot-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      text-align: center;
+      gap: 22px;
+      background: radial-gradient(circle at 50% 25%, var(--md-sys-color-primary-container), var(--md-sys-color-surface) 68%);
+    }
+    .android-mark {
+      width: 96px;
+      height: 96px;
+      border-radius: 30px;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.16);
+      animation: pulseMark 2.2s ease-in-out infinite;
+    }
+    @keyframes pulseMark {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    .progress-track {
+      width: min(280px, 80vw);
+      height: 6px;
+      border-radius: 999px;
+      background: var(--md-sys-color-surface-container-highest);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 12%;
+      border-radius: 999px;
+      background: var(--md-sys-color-primary);
+      transition: width 0.25s ease;
+    }
+    .boot-log {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <main class="boot-wrap">
+      <div class="android-mark">
+        <span class="material-symbols-rounded filled" style="font-size:50px;">android</span>
+      </div>
+
+      <div>
+        <h1 style="font-size:28px;font-weight:700;letter-spacing:-0.02em;" id="boot-device">Pixel 10</h1>
+        <div style="font-size:13px;font-weight:600;color:var(--md-sys-color-on-surface-variant);margin-top:4px;">
+          Powered by Android 16 · Material You
+        </div>
+      </div>
+
+      <div id="powered-off-box" style="display:none;flex-direction:column;align-items:center;gap:12px;">
+        <div style="font-size:14px;color:var(--md-sys-color-on-surface-variant);" id="off-caption">Gerät ist ausgeschaltet</div>
+        <button class="m3-btn" onclick="startBootSequence()">
+          <span class="material-symbols-rounded" style="font-size:20px;">power_settings_new</span>
+          <span id="power-on-label">Einschalten</span>
+        </button>
+      </div>
+
+      <div id="boot-anim-box" style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+        <div class="progress-track">
+          <div class="progress-fill" id="boot-bar"></div>
+        </div>
+        <div class="boot-log" id="boot-status">Initialisiere Systemdienste…</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="system.js"></script>
+  <script>
+    const st = AndroidOS.getState();
+    AndroidOS.applyAppearance(st);
+    document.getElementById('boot-device').textContent = st.deviceName || 'Pixel 10';
+
+    const COPY = {
+      de: {
+        off: 'Gerät ist ausgeschaltet',
+        powerOn: 'Einschalten',
+        steps: [
+          'Kernel & Systemdienste werden gestartet…',
+          'Material-You-Farbpalette wird geladen…',
+          'Lokaler Speicher wird geprüft…',
+          'Systemstart wird abgeschlossen…'
+        ]
+      },
+      en: {
+        off: 'Device is powered off',
+        powerOn: 'Power on',
+        steps: [
+          'Starting kernel & core services…',
+          'Loading Material You color tokens…',
+          'Checking local storage state…',
+          'Finishing system boot…'
+        ]
+      },
+      fr: {
+        off: 'L’appareil est éteint',
+        powerOn: 'Allumer',
+        steps: [
+          'Démarrage du noyau et des services…',
+          'Chargement de la palette Material You…',
+          'Vérification du stockage local…',
+          'Finalisation du démarrage…'
+        ]
+      },
+      es: {
+        off: 'El dispositivo está apagado',
+        powerOn: 'Encender',
+        steps: [
+          'Iniciando kernel y servicios del sistema…',
+          'Cargando paleta Material You…',
+          'Comprobando almacenamiento local…',
+          'Completando el arranque…'
+        ]
+      },
+      ja: {
+        off: '電源はオフになっています',
+        powerOn: '電源を入れる',
+        steps: [
+          'カーネルとシステムサービスを起動中…',
+          'Material You カラーを読み込み中…',
+          'ローカルストレージを確認中…',
+          '起動を完了しています…'
+        ]
+      }
+    };
+
+    const lang = AndroidOS.getLang(st);
+    const c = COPY[lang] || COPY.de;
+    document.getElementById('off-caption').textContent = c.off;
+    document.getElementById('power-on-label').textContent = c.powerOn;
+
+    let bootTimer = null;
+
+    function runBoot() {
+      clearInterval(bootTimer);
+      document.getElementById('powered-off-box').style.display = 'none';
+      document.getElementById('boot-anim-box').style.display = 'flex';
+
+      let step = 0;
+      const bar = document.getElementById('boot-bar');
+      const status = document.getElementById('boot-status');
+      bar.style.width = '22%';
+      status.textContent = c.steps[0];
+
+      bootTimer = setInterval(() => {
+        step++;
+        const pct = Math.min(100, 22 + step * 26);
+        bar.style.width = pct + '%';
+        if (c.steps[step]) {
+          status.textContent = c.steps[step];
+        }
+        if (step >= 3) {
+          clearInterval(bootTimer);
+          setTimeout(() => {
+            const hasRaw = AndroidOS.hasRawStorage();
+            const cur = AndroidOS.getState();
+            if (hasRaw && (cur.hasData || cur.oobeCompleted)) {
+              AndroidOS.updateState(s => { s.poweredOff = false; s.locked = true; });
+              window.location.replace('lockscreen.html');
+            } else {
+              AndroidOS.updateState(s => { s.poweredOff = false; });
+              window.location.replace('oobe.html');
+            }
+          }, 350);
+        }
+      }, 420);
+    }
+
+    function startBootSequence() {
+      AndroidOS.updateState(s => { s.poweredOff = false; s.locked = true; });
+      runBoot();
+    }
+
+    if (st.poweredOff) {
+      document.getElementById('powered-off-box').style.display = 'flex';
+      document.getElementById('boot-anim-box').style.display = 'none';
+    } else {
+      runBoot();
+    }
+  </script>
+</body>
+</html>
