@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Out-of-Box Experience – Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .oobe-wrap {
+      flex: 1;
+      max-width: 700px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 22px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .step-seg {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--md-sys-color-surface-container-highest);
+      transition: background 0.25s ease;
+    }
+    .step-seg.done {
+      background: var(--md-sys-color-primary);
+    }
+    .oobe-hero-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 22px;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    .oobe-title {
+      font-size: clamp(26px, 5vw, 34px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .oobe-sub {
+      font-size: 15px;
+      color: var(--md-sys-color-on-surface-variant);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .option-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 2px solid var(--md-sys-color-outline-variant);
+      background: var(--md-sys-color-surface-container-low);
+      color: var(--md-sys-color-on-surface);
+      font-family: var(--font-sans);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .option-card.active {
+      border-color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--md-sys-color-surface-container);
+      margin-bottom: 10px;
+    }
+    .oobe-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-top: 8px;
+    }
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .summary-item {
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--md-sys-color-surface-container);
+    }
+    .import-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 20px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px dashed var(--md-sys-color-outline);
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+
+    <main class="oobe-wrap">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--md-sys-color-on-surface-variant);">
+          <span id="step-counter">STEP 1 / 5</span>
+          <span id="oobe-badge">OUT-OF-BOX SETUP</span>
+        </div>
+        <div class="stepper" id="stepper"></div>
+
+        <!-- Step 1: Language, Profile & Backup Import -->
+        <section class="m3-card step-panel" data-step="0">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">waving_hand</span>
+          </div>
+          <h1 class="oobe-title" id="t-s1-title">Welcome to Android</h1>
+          <p class="oobe-sub" id="t-s1-sub">Configure your language, profile, and preferences — or import an existing backup JSON.</p>
+
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-lang">LANGUAGE</label>
+              <select id="oobe-lang" class="m3-input" onchange="onLanguageChange()">
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="ja">日本語</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-user">USER NAME</label>
+              <input type="text" id="oobe-username" class="m3-input" placeholder="Guest">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-device">DEVICE NAME</label>
+              <input type="text" id="oobe-devicename" class="m3-input" placeholder="Pixel 10">
+            </div>
+          </div>
+
+          <div class="import-box">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+              <div>
+                <div style="font-weight:700;font-size:14px;" id="lbl-import-title">Import Backup (JSON)</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="lbl-import-desc">Restore a previously exported system state file.</div>
+              </div>
+              <label class="m3-btn m3-btn-tonal" style="cursor:pointer;">
+                <span class="material-symbols-rounded" style="font-size:18px;">upload_file</span>
+                <span id="lbl-import-btn">Choose JSON</span>
+                <input type="file" id="oobe-import-file" accept=".json,application/json" style="display:none;" onchange="handleImportFile(event)">
+              </label>
+            </div>
+            <div id="import-feedback" style="font-size:12px;margin-top:8px;color:var(--md-sys-color-primary);font-weight:600;"></div>
+          </div>
+        </section>
+
+        <!-- Step 2: Connectivity & Optional Lock PIN -->
+        <section class="m3-card step-panel" data-step="1" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">shield</span>
+          </div>
+          <h1 class="oobe-title" id="t-s2-title">Connections & Lock</h1>
+          <p class="oobe-sub" id="t-s2-sub">Choose default radios and set an optional lockscreen PIN (leave empty for swipe unlock).</p>
+
+          <div class="toggle-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">wifi</span>
+              <div>
+                <div style="font-weight:700;" id="lbl-wifi-row">Wi-Fi</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Wireless networking</div>
+              </div>
+            </div>
+            <button class="m3-chip" id="btn-wifi" onclick="toggleOobeFlag('wifi')"></button>
+          </div>
+
+          <div class="toggle-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">bluetooth</span>
+              <div>
+                <div style="font-weight:700;">Bluetooth</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Accessories & audio</div>
+              </div>
+            </div>
+            <button class="m3-chip" id="btn-bt" onclick="toggleOobeFlag('bluetooth')"></button>
+          </div>
+
+          <div class="toggle-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">do_not_disturb_on</span>
+              <div>
+                <div style="font-weight:700;" id="lbl-dnd-row">Do Not Disturb</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Quiet mode</div>
+              </div>
+            </div>
+            <button class="m3-chip" id="btn-dnd" onclick="toggleOobeFlag('dnd')"></button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-pin">OPTIONAL LOCK PIN (4–8 DIGITS)</label>
+            <input type="password" id="oobe-pin" class="m3-input" inputmode="numeric" maxlength="8" placeholder="••••">
+          </div>
+        </section>
+
+        <!-- Step 3: Material You Theme -->
+        <section class="m3-card step-panel" data-step="2" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">palette</span>
+          </div>
+          <h1 class="oobe-title" id="t-s3-title">Material You Theme</h1>
+          <p class="oobe-sub" id="t-s3-sub">Pick an accent palette for buttons, chips, and containers.</p>
+
+          <div class="option-grid" id="oobe-themes">
+            <button class="option-card" data-val="ocean" onclick="pickTheme('ocean')">
+              <div style="width:24px;height:24px;border-radius:999px;background:#0061A4;margin-bottom:8px;"></div>
+              <div style="font-weight:700;">Ocean</div>
+            </button>
+            <button class="option-card" data-val="forest" onclick="pickTheme('forest')">
+              <div style="width:24px;height:24px;border-radius:999px;background:#2D6A4F;margin-bottom:8px;"></div>
+              <div style="font-weight:700;">Forest</div>
+            </button>
+            <button class="option-card" data-val="violet" onclick="pickTheme('violet')">
+              <div style="width:24px;height:24px;border-radius:999px;background:#6750A4;margin-bottom:8px;"></div>
+              <div style="font-weight:700;">Violet</div>
+            </button>
+            <button class="option-card" data-val="amber" onclick="pickTheme('amber')">
+              <div style="width:24px;height:24px;border-radius:999px;background:#8B5000;margin-bottom:8px;"></div>
+              <div style="font-weight:700;">Amber</div>
+            </button>
+          </div>
+        </section>
+
+        <!-- Step 4: Display & Mode -->
+        <section class="m3-card step-panel" data-step="3" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">contrast</span>
+          </div>
+          <h1 class="oobe-title" id="t-s4-title">Display & Mode</h1>
+          <p class="oobe-sub" id="t-s4-sub">Choose light or dark mode and default brightness.</p>
+
+          <div class="option-grid" style="grid-template-columns:1fr 1fr;margin-bottom:18px;">
+            <button class="option-card" id="mode-light-card" onclick="pickMode('light')">
+              <span class="material-symbols-rounded filled" style="margin-bottom:8px;">light_mode</span>
+              <div style="font-weight:700;" id="lbl-light">Light</div>
+            </button>
+            <button class="option-card" id="mode-dark-card" onclick="pickMode('dark')">
+              <span class="material-symbols-rounded filled" style="margin-bottom:8px;">dark_mode</span>
+              <div style="font-weight:700;" id="lbl-dark">Dark</div>
+            </button>
+          </div>
+
+          <div class="m3-card-filled">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-weight:700;font-size:14px;" id="lbl-bright">Brightness</span>
+              <span id="oobe-bright-val" style="font-weight:700;font-size:14px;">100 %</span>
+            </div>
+            <input type="range" id="oobe-bright" min="45" max="100" style="width:100%;accent-color:var(--md-sys-color-primary);">
+          </div>
+        </section>
+
+        <!-- Step 5: Summary -->
+        <section class="m3-card step-panel" data-step="4" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">check_circle</span>
+          </div>
+          <h1 class="oobe-title" id="t-s5-title">Ready to go</h1>
+          <p class="oobe-sub" id="t-s5-sub">Your initial configuration will be saved locally in this browser.</p>
+          <div class="summary-box" id="oobe-summary"></div>
+        </section>
+      </div>
+
+      <div class="oobe-footer">
+        <button class="m3-btn m3-btn-outlined" id="prev-btn" onclick="prevStep()">
+          <span class="material-symbols-rounded" style="font-size:18px;">arrow_back</span>
+          <span id="lbl-prev">Back</span>
+        </button>
+        <button class="m3-btn" id="next-btn" onclick="nextStep()">
+          <span id="next-label">Next</span>
+          <span class="material-symbols-rounded" id="next-icon" style="font-size:18px;">arrow_forward</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <script src="system.js"></script>
+  <script>
+    AndroidOS.mountShell({ isSetup: true, showGestureBar: false });
+
+    const OOBE_TEXT = {
+      de: {
+        step: (c, t) => `SCHRITT ${c} VON ${t}`,
+        s1Title: 'Willkommen bei Android',
+        s1Sub: 'Wähle Sprache, Profil und Design – oder importiere ein vorhandenes Backup (JSON).',
+        lang: 'SPRACHE',
+        user: 'NUTZERNAME',
+        device: 'GERÄTENAME',
+        importTitle: 'Backup importieren (JSON)',
+        importDesc: 'Stelle einen zuvor exportierten Systemzustand wieder her.',
+        importBtn: 'JSON wählen',
+        importOk: 'Backup importiert! Weiter zum Sperrbildschirm…',
+        importErr: 'Ungültige JSON-Backup-Datei.',
+        s2Title: 'Verbindungen & Sperre',
+        s2Sub: 'Lege Funkmodule und optional eine Sperr-PIN fest (leer = ohne PIN entsperren).',
+        wifiRow: 'WLAN',
+        dndRow: 'Nicht stören',
+        pin: 'OPTIONALE SPERR-PIN (4–8 ZIFFERN)',
+        s3Title: 'Material-You-Farbpalette',
+        s3Sub: 'Wähle eine Akzentfarbe für Buttons, Chips und Flächen.',
+        s4Title: 'Display & Modus',
+        s4Sub: 'Wähle helles oder dunkles Design sowie die Standardhelligkeit.',
+        light: 'Hell',
+        dark: 'Dunkel',
+        bright: 'Helligkeit',
+        s5Title: 'Einrichtung abschließen',
+        s5Sub: 'Alle Einstellungen werden lokal im Browser gespeichert.',
+        prev: 'Zurück',
+        next: 'Weiter',
+        finish: 'Fertigstellen',
+        on: 'An',
+        off: 'Aus'
+      },
+      en: {
+        step: (c, t) => `STEP ${c} OF ${t}`,
+        s1Title: 'Welcome to Android',
+        s1Sub: 'Configure your language, profile, and look — or import an existing backup JSON.',
+        lang: 'LANGUAGE',
+        user: 'USER NAME',
+        device: 'DEVICE NAME',
+        importTitle: 'Import Backup (JSON)',
+        importDesc: 'Restore a previously exported system state file.',
+        importBtn: 'Choose JSON',
+        importOk: 'Backup imported! Redirecting to lock screen…',
+        importErr: 'Invalid JSON backup file.',
+        s2Title: 'Connections & Lock',
+        s2Sub: 'Choose radios and an optional lock PIN (empty = swipe/tap unlock).',
+        wifiRow: 'Wi-Fi',
+        dndRow: 'Do Not Disturb',
+        pin: 'OPTIONAL LOCK PIN (4–8 DIGITS)',
+        s3Title: 'Material You Palette',
+        s3Sub: 'Select an accent color for buttons, chips, and containers.',
+        s4Title: 'Display & Mode',
+        s4Sub: 'Choose light or dark mode and default brightness.',
+        light: 'Light',
+        dark: 'Dark',
+        bright: 'Brightness',
+        s5Title: 'All set',
+        s5Sub: 'Your preferences will be stored locally in this browser.',
+        prev: 'Back',
+        next: 'Next',
+        finish: 'Finish setup',
+        on: 'On',
+        off: 'Off'
+      },
+      fr: {
+        step: (c, t) => `ÉTAPE ${c} SUR ${t}`,
+        s1Title: 'Bienvenue sur Android',
+        s1Sub: 'Choisissez la langue, le profil et le style — ou importez une sauvegarde JSON.',
+        lang: 'LANGUE',
+        user: 'NOM D’UTILISATEUR',
+        device: 'NOM DE L’APPAREIL',
+        importTitle: 'Importer une sauvegarde (JSON)',
+        importDesc: 'Restaurer un fichier d’état système exporté.',
+        importBtn: 'Choisir JSON',
+        importOk: 'Sauvegarde importée ! Redirection…',
+        importErr: 'Fichier JSON invalide.',
+        s2Title: 'Connexions & Verrouillage',
+        s2Sub: 'Définissez les connexions et un code PIN facultatif.',
+        wifiRow: 'Wi-Fi',
+        dndRow: 'Ne pas déranger',
+        pin: 'CODE PIN FACULTATIF (4–8 CHIFFRES)',
+        s3Title: 'Palette Material You',
+        s3Sub: 'Choisissez une couleur d’accentuation pour le système.',
+        s4Title: 'Affichage & Mode',
+        s4Sub: 'Choisissez le mode clair ou sombre et la luminosité.',
+        light: 'Clair',
+        dark: 'Sombre',
+        bright: 'Luminosité',
+        s5Title: 'Tout est prêt',
+        s5Sub: 'Vos préférences sont enregistrées localement.',
+        prev: 'Retour',
+        next: 'Suivant',
+        finish: 'Terminer',
+        on: 'Actif',
+        off: 'Inactif'
+      },
+      es: {
+        step: (c, t) => `PASO ${c} DE ${t}`,
+        s1Title: 'Te damos la bienvenida a Android',
+        s1Sub: 'Configura idioma, perfil y diseño, o importa una copia de seguridad JSON.',
+        lang: 'IDIOMA',
+        user: 'NOMBRE DE USUARIO',
+        device: 'NOMBRE DEL DISPOSITIVO',
+        importTitle: 'Importar copia (JSON)',
+        importDesc: 'Restaura un archivo de estado del sistema exportado.',
+        importBtn: 'Elegir JSON',
+        importOk: '¡Copia importada! Redirigiendo…',
+        importErr: 'Archivo JSON no válido.',
+        s2Title: 'Conexiones y bloqueo',
+        s2Sub: 'Elige conexiones y un PIN opcional.',
+        wifiRow: 'Wi-Fi',
+        dndRow: 'No molestar',
+        pin: 'PIN OPCIONAL (4–8 DÍGITOS)',
+        s3Title: 'Paleta Material You',
+        s3Sub: 'Elige un color de acento para el sistema.',
+        s4Title: 'Pantalla y modo',
+        s4Sub: 'Elige modo claro u oscuro y brillo predeterminado.',
+        light: 'Claro',
+        dark: 'Oscuro',
+        bright: 'Brillo',
+        s5Title: 'Todo listo',
+        s5Sub: 'Tu configuración se guardará localmente en el navegador.',
+        prev: 'Atrás',
+        next: 'Siguiente',
+        finish: 'Finalizar',
+        on: 'Activado',
+        off: 'Desactivado'
+      },
+      ja: {
+        step: (c, t) => `ステップ ${c} / ${t}`,
+        s1Title: 'Android へようこそ',
+        s1Sub: '言語・プロフィール・テーマを設定するか、JSONバックアップを読み込みます。',
+        lang: '言語',
+        user: 'ユーザー名',
+        device: 'デバイス名',
+        importTitle: 'バックアップを読み込み (JSON)',
+        importDesc: '書き出したシステム状態ファイルを復元します。',
+        importBtn: 'JSONを選択',
+        importOk: 'バックアップを読み込みました。ロック画面へ移動します…',
+        importErr: '無効なJSONファイルです。',
+        s2Title: '接続とロック',
+        s2Sub: '通信設定と任意のロックPINを設定します。',
+        wifiRow: 'Wi-Fi',
+        dndRow: 'マナーモード',
+        pin: '任意のロックPIN (4〜8桁)',
+        s3Title: 'Material You カラー',
+        s3Sub: 'システム全体のアクセントカラーを選択します。',
+        s4Title: 'ディスプレイとテーマ',
+        s4Sub: 'ライト/ダークモードと明るさを選択します。',
+        light: 'ライト',
+        dark: 'ダーク',
+        bright: '明るさ',
+        s5Title: '設定完了',
+        s5Sub: '設定はこのブラウザにローカル保存されます。',
+        prev: '戻る',
+        next: '次へ',
+        finish: '完了',
+        on: 'オン',
+        off: 'オフ'
+      }
+    };
+
+    const TOTAL_STEPS = 5;
+    let currentStep = 0;
+
+    function getTx() {
+      const lang = AndroidOS.normalizeLang(document.getElementById('oobe-lang').value);
+      return OOBE_TEXT[lang] || OOBE_TEXT.de;
+    }
+
+    function applyOobeTranslations() {
+      const tx = getTx();
+      document.getElementById('step-counter').textContent = tx.step(currentStep + 1, TOTAL_STEPS);
+      document.getElementById('t-s1-title').textContent = tx.s1Title;
+      document.getElementById('t-s1-sub').textContent = tx.s1Sub;
+      document.getElementById('lbl-lang').textContent = tx.lang;
+      document.getElementById('lbl-user').textContent = tx.user;
+      document.getElementById('lbl-device').textContent = tx.device;
+      document.getElementById('lbl-import-title').textContent = tx.importTitle;
+      document.getElementById('lbl-import-desc').textContent = tx.importDesc;
+      document.getElementById('lbl-import-btn').textContent = tx.importBtn;
+      document.getElementById('t-s2-title').textContent = tx.s2Title;
+      document.getElementById('t-s2-sub').textContent = tx.s2Sub;
+      document.getElementById('lbl-wifi-row').textContent = tx.wifiRow;
+      document.getElementById('lbl-dnd-row').textContent = tx.dndRow;
+      document.getElementById('lbl-pin').textContent = tx.pin;
+      document.getElementById('t-s3-title').textContent = tx.s3Title;
+      document.getElementById('t-s3-sub').textContent = tx.s3Sub;
+      document.getElementById('t-s4-title').textContent = tx.s4Title;
+      document.getElementById('t-s4-sub').textContent = tx.s4Sub;
+      document.getElementById('lbl-light').textContent = tx.light;
+      document.getElementById('lbl-dark').textContent = tx.dark;
+      document.getElementById('lbl-bright').textContent = tx.bright;
+      document.getElementById('t-s5-title').textContent = tx.s5Title;
+      document.getElementById('t-s5-sub').textContent = tx.s5Sub;
+      document.getElementById('lbl-prev').textContent = tx.prev;
+
+      const isLast = currentStep === TOTAL_STEPS - 1;
+      document.getElementById('next-label').textContent = isLast ? tx.finish : tx.next;
+      refreshControls();
+    }
+
+    function onLanguageChange() {
+      const lang = AndroidOS.normalizeLang(document.getElementById('oobe-lang').value);
+      AndroidOS.updateState(s => { s.language = lang; });
+      applyOobeTranslations();
+    }
+
+    function initFromState() {
+      const st = AndroidOS.getState();
+      document.getElementById('oobe-lang').value = AndroidOS.getLang(st);
+      document.getElementById('oobe-username').value = st.userName || 'Guest';
+      document.getElementById('oobe-devicename').value = st.deviceName || 'Pixel 10';
+      document.getElementById('oobe-pin').value = st.lockPin || '';
+      document.getElementById('oobe-bright').value = st.brightness || 100;
+      applyOobeTranslations();
+    }
+
+    function refreshControls() {
+      const st = AndroidOS.getState();
+      const tx = getTx();
+
+      const wifiBtn = document.getElementById('btn-wifi');
+      const btBtn = document.getElementById('btn-bt');
+      const dndBtn = document.getElementById('btn-dnd');
+
+      wifiBtn.textContent = st.wifi ? tx.on : tx.off;
+      wifiBtn.classList.toggle('active', !!st.wifi);
+
+      btBtn.textContent = st.bluetooth ? tx.on : tx.off;
+      btBtn.classList.toggle('active', !!st.bluetooth);
+
+      dndBtn.textContent = st.dnd ? tx.on : tx.off;
+      dndBtn.classList.toggle('active', !!st.dnd);
+
+      document.querySelectorAll('#oobe-themes .option-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.val === st.theme);
+      });
+
+      document.getElementById('mode-light-card').classList.toggle('active', st.mode === 'light');
+      document.getElementById('mode-dark-card').classList.toggle('active', st.mode === 'dark');
+      document.getElementById('oobe-bright-val').textContent = `${st.brightness || 100} %`;
+    }
+
+    function saveStepInputs() {
+      const lang = AndroidOS.normalizeLang(document.getElementById('oobe-lang').value);
+      const uName = document.getElementById('oobe-username').value.trim() || 'Guest';
+      const dName = document.getElementById('oobe-devicename').value.trim() || 'Pixel 10';
+      const pinVal = document.getElementById('oobe-pin').value.replace(/\D/g, '').slice(0, 8);
+      const bright = Number(document.getElementById('oobe-bright').value) || 100;
+
+      AndroidOS.updateState(s => {
+        s.language = lang;
+        s.userName = uName;
+        s.deviceName = dName;
+        s.lockPin = pinVal;
+        s.brightness = bright;
+      });
+    }
+
+    function handleImportFile(event) {
+      const file = event.target.files && event.target.files[0];
+      const tx = getTx();
+      const fb = document.getElementById('import-feedback');
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          AndroidOS.importStateJson(reader.result);
+          fb.style.color = 'var(--md-sys-color-primary)';
+          fb.textContent = tx.importOk;
+          setTimeout(() => {
+            window.location.replace('lockscreen.html');
+          }, 500);
+        } catch (err) {
+          fb.style.color = 'var(--md-sys-color-error)';
+          fb.textContent = tx.importErr;
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function toggleOobeFlag(key) {
+      AndroidOS.updateState(s => { s[key] = !s[key]; });
+      refreshControls();
+    }
+
+    function pickTheme(theme) {
+      AndroidOS.updateState(s => { s.theme = theme; });
+      refreshControls();
+    }
+
+    function pickMode(mode) {
+      AndroidOS.updateState(s => { s.mode = mode; });
+      refreshControls();
+    }
+
+    document.getElementById('oobe-bright').addEventListener('input', (e) => {
+      AndroidOS.updateState(s => { s.brightness = Number(e.target.value); });
+      refreshControls();
+    });
+
+    function renderSummary() {
+      const st = AndroidOS.getState();
+      document.getElementById('oobe-summary').innerHTML = `
+        <div class="summary-item">
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">USER</div>
+          <div style="font-weight:700;">${st.userName}</div>
+        </div>
+        <div class="summary-item">
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">DEVICE</div>
+          <div style="font-weight:700;">${st.deviceName}</div>
+        </div>
+        <div class="summary-item">
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">LANGUAGE & THEME</div>
+          <div style="font-weight:700;">${st.language.toUpperCase()} · ${st.theme} (${st.mode})</div>
+        </div>
+        <div class="summary-item">
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">LOCK PIN</div>
+          <div style="font-weight:700;">${st.lockPin ? '••••' : 'None'}</div>
+        </div>
+      `;
+    }
+
+    function renderStep() {
+      document.getElementById('stepper').innerHTML = Array.from({ length: TOTAL_STEPS }, (_, i) =>
+        `<div class="step-seg ${i <= currentStep ? 'done' : ''}"></div>`
+      ).join('');
+
+      document.querySelectorAll('.step-panel').forEach((panel, idx) => {
+        panel.style.display = idx === currentStep ? 'block' : 'none';
+      });
+
+      document.getElementById('prev-btn').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+      const isLast = currentStep === TOTAL_STEPS - 1;
+      document.getElementById('next-icon').textContent = isLast ? 'check' : 'arrow_forward';
+
+      applyOobeTranslations();
+      if (isLast) renderSummary();
+    }
+
+    function nextStep() {
+      saveStepInputs();
+      if (currentStep < TOTAL_STEPS - 1) {
+        currentStep++;
+        renderStep();
+      } else {
+        AndroidOS.updateState(s => {
+          s.hasData = true;
+          s.oobeCompleted = true;
+          s.poweredOff = false;
+          s.locked = true;
+        });
+        window.location.href = 'lockscreen.html';
+      }
+    }
+
+    function prevStep() {
+      saveStepInputs();
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
+    }
+
+    initFromState();
+    renderStep();
+  </script>
+</body>
+</html>
