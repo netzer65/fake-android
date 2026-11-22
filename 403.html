@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 – Zugriff verweigert · Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .err-card {
+      max-width: 560px;
+      margin: 24px auto;
+      text-align: center;
+      padding: 28px 22px;
+      border-radius: 28px;
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+      border: 1px solid var(--md-sys-color-outline-variant);
+    }
+    .err-status-num {
+      font-family: var(--font-mono);
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-top: 8px;
+    }
+    .err-code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.08);
+      display: inline-block;
+      margin: 10px 0 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <main class="app-main">
+      <div class="err-card">
+        <span class="material-symbols-rounded filled" style="font-size:56px;">lock</span>
+        <div class="err-status-num">403</div>
+        <h1 style="font-size:22px;font-weight:700;margin-top:6px;">Zugriff verweigert</h1>
+        <div class="err-code">HTTP_403 · FORBIDDEN</div>
+        <p style="font-size:14px;line-height:1.5;margin-bottom:20px;">
+          Für diese Ansicht oder Systemfunktion fehlen die erforderlichen Berechtigungen.
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <a href="start.html" class="m3-btn">Zur Startseite</a>
+          <button class="m3-btn m3-btn-tonal" onclick="history.back()">Zurück</button>
+        </div>
+      </div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+  </script>
+</body>
+</html>
