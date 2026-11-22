@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status- & Fehlerseiten – Übersicht · Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .play-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      margin-bottom: 14px;
+    }
+    .play-search input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      outline: none;
+    }
+    .play-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+    }
+    .app-store-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 22px;
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      margin-bottom: 10px;
+    }
+    .app-store-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .store-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .store-meta {
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+      flex-wrap: wrap;
+    }
+    .code-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+    .install-pill {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .install-pill.installed {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+    .install-pill.available {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <header class="app-topbar">
+      <div class="app-title-group">
+        <a href="start.html" class="icon-btn" title="Start">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </a>
+        <div>
+          <h1 style="font-size:21px;font-weight:600;" id="play-header-title">Status-Übersicht</h1>
+        </div>
+      </div>
+      <div class="status-pill" id="play-account-badge">41 Seiten</div>
+    </header>
+
+    <main class="app-main">
+      <div class="play-search">
+        <span class="material-symbols-rounded" style="color:var(--md-sys-color-on-surface-variant);">search</span>
+        <input type="search" id="play-search-input" oninput="renderStore()" placeholder="Code, Titel oder Datei suchen">
+      </div>
+
+      <div class="play-tabs" id="play-category-tabs">
+        <button class="m3-chip active" data-cat="all" onclick="setCat('all')" id="tab-all">Alle (41)</button>
+        <button class="m3-chip" data-cat="1900" onclick="setCat('1900')" id="tab-1900">1900 (12)</button>
+        <button class="m3-chip" data-cat="4xx" onclick="setCat('4xx')" id="tab-4xx">4xx (19)</button>
+        <button class="m3-chip" data-cat="5xx" onclick="setCat('5xx')" id="tab-5xx">5xx (10)</button>
+      </div>
+
+      <div id="play-app-list"></div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+
+    const CATALOG = [
+      { id: '1900-1.html', code: '1900-1', title: 'Gladbach ist der geilste Club der Welt', cat: '1900', tag: 'Bestätigung', file: '1900-1.html', icon: 'verified', bg: '#B7E4C7', fg: '#082115', variant: 'available' },
+      { id: '1900-2.html', code: '1900-2', title: 'Steinbock oder Köln-Fan erkannt', cat: '1900', tag: 'Fehler', file: '1900-2.html', icon: 'gpp_bad', bg: '#FFDAD6', fg: '#410002', variant: 'available' },
+      { id: '1900-3.html', code: '1900-3', title: 'Spieltag', cat: '1900', tag: 'Matchday', file: '1900-3.html', icon: 'sports_soccer', bg: '#D1E4FF', fg: '#001D36', variant: 'available' },
+      { id: '1900-4.html', code: '1900-4', title: 'Pokalabend', cat: '1900', tag: 'K.o.-Runde', file: '1900-4.html', icon: 'emoji_events', bg: '#FFDCBE', fg: '#2C1600', variant: 'available' },
+      { id: '1900-5.html', code: '1900-5', title: 'Nordkurve', cat: '1900', tag: 'Kurve', file: '1900-5.html', icon: 'campaign', bg: '#B7E4C7', fg: '#082115', variant: 'available' },
+      { id: '1900-6.html', code: '1900-6', title: 'Auswärtssieg', cat: '1900', tag: '3 Punkte', file: '1900-6.html', icon: 'flight_takeoff', bg: '#DAE8B5', fg: '#161F02', variant: 'available' },
+      { id: '1900-7.html', code: '1900-7', title: 'Heimsieg', cat: '1900', tag: 'Heimspiel', file: '1900-7.html', icon: 'stadium', bg: '#B7E4C7', fg: '#082115', variant: 'available' },
+      { id: '1900-8.html', code: '1900-8', title: 'Derbysieg', cat: '1900', tag: 'Derby', file: '1900-8.html', icon: 'military_tech', bg: '#EADDFF', fg: '#21005D', variant: 'available' },
+      { id: '1900-9.html', code: '1900-9', title: 'Auswärtsfahrt', cat: '1900', tag: 'Gästeblock', file: '1900-9.html', icon: 'directions_bus', bg: '#D7E3F7', fg: '#101C2B', variant: 'available' },
+      { id: '1900-10.html', code: '1900-10', title: 'Flutlichtspiel', cat: '1900', tag: 'Abendspiel', file: '1900-10.html', icon: 'wb_twilight', bg: '#F2DAFF', fg: '#251431', variant: 'available' },
+      { id: '1900-11.html', code: '1900-11', title: 'Last-Minute-Tor', cat: '1900', tag: 'Schlussphase', file: '1900-11.html', icon: 'bolt', bg: '#FFDCBE', fg: '#2C1600', variant: 'available' },
+      { id: '1900-12.html', code: '1900-12', title: 'Elfmeter-Drama', cat: '1900', tag: 'Vom Punkt', file: '1900-12.html', icon: 'sports', bg: '#FFD8E4', fg: '#31111D', variant: 'available' },
+
+      { id: '400.html', code: '400', title: 'Fehlerhafte Anfrage', cat: '4xx', tag: 'Bad Request', file: '400.html', icon: 'error', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '401.html', code: '401', title: 'Nicht autorisiert', cat: '4xx', tag: 'Unauthorized', file: '401.html', icon: 'lock', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '403.html', code: '403', title: 'Zugriff verweigert', cat: '4xx', tag: 'Forbidden', file: '403.html', icon: 'block', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '404.html', code: '404', title: 'Nicht gefunden', cat: '4xx', tag: 'Not Found', file: '404.html', icon: 'search_off', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '405.html', code: '405', title: 'Methode nicht erlaubt', cat: '4xx', tag: 'Method Not Allowed', file: '405.html', icon: 'do_not_disturb_on', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '406.html', code: '406', title: 'Nicht annehmbar', cat: '4xx', tag: 'Not Acceptable', file: '406.html', icon: 'tune', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '408.html', code: '408', title: 'Zeitüberschreitung der Anfrage', cat: '4xx', tag: 'Request Timeout', file: '408.html', icon: 'schedule', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '409.html', code: '409', title: 'Konflikt', cat: '4xx', tag: 'Conflict', file: '409.html', icon: 'merge', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '410.html', code: '410', title: 'Nicht mehr verfügbar', cat: '4xx', tag: 'Gone', file: '410.html', icon: 'delete_forever', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '411.html', code: '411', title: 'Länge erforderlich', cat: '4xx', tag: 'Length Required', file: '411.html', icon: 'straighten', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '413.html', code: '413', title: 'Inhalt zu groß', cat: '4xx', tag: 'Content Too Large', file: '413.html', icon: 'data_usage', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '414.html', code: '414', title: 'URI zu lang', cat: '4xx', tag: 'URI Too Long', file: '414.html', icon: 'link_off', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '415.html', code: '415', title: 'Medientyp nicht unterstützt', cat: '4xx', tag: 'Unsupported Media Type', file: '415.html', icon: 'draft', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '416.html', code: '416', title: 'Bereich nicht erfüllbar', cat: '4xx', tag: 'Range Not Satisfiable', file: '416.html', icon: 'linear_scale', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '422.html', code: '422', title: 'Nicht verarbeitbare Entität', cat: '4xx', tag: 'Unprocessable Content', file: '422.html', icon: 'rule', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '426.html', code: '426', title: 'Upgrade erforderlich', cat: '4xx', tag: 'Upgrade Required', file: '426.html', icon: 'upgrade', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '429.html', code: '429', title: 'Zu viele Anfragen', cat: '4xx', tag: 'Too Many Requests', file: '429.html', icon: 'speed', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '431.html', code: '431', title: 'Header-Felder zu groß', cat: '4xx', tag: 'Request Header Fields Too Large', file: '431.html', icon: 'request_quote', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+      { id: '451.html', code: '451', title: 'Aus rechtlichen Gründen gesperrt', cat: '4xx', tag: 'Unavailable For Legal Reasons', file: '451.html', icon: 'gavel', bg: '#FFDAD6', fg: '#410002', variant: 'installed' },
+
+      { id: '500.html', code: '500', title: 'Interner Serverfehler', cat: '5xx', tag: 'Internal Server Error', file: '500.html', icon: 'report', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '501.html', code: '501', title: 'Nicht implementiert', cat: '5xx', tag: 'Not Implemented', file: '501.html', icon: 'construction', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '502.html', code: '502', title: 'Ungültiges Gateway', cat: '5xx', tag: 'Bad Gateway', file: '502.html', icon: 'hub', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '503.html', code: '503', title: 'Dienst nicht verfügbar', cat: '5xx', tag: 'Service Unavailable', file: '503.html', icon: 'cloud_off', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '504.html', code: '504', title: 'Gateway-Zeitüberschreitung', cat: '5xx', tag: 'Gateway Timeout', file: '504.html', icon: 'hourglass_disabled', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '505.html', code: '505', title: 'HTTP-Version nicht unterstützt', cat: '5xx', tag: 'HTTP Version Not Supported', file: '505.html', icon: 'sync_problem', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '507.html', code: '507', title: 'Unzureichender Speicherplatz', cat: '5xx', tag: 'Insufficient Storage', file: '507.html', icon: 'storage', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '508.html', code: '508', title: 'Endlosschleife erkannt', cat: '5xx', tag: 'Loop Detected', file: '508.html', icon: 'loop', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '510.html', code: '510', title: 'Nicht erweitert', cat: '5xx', tag: 'Not Extended', file: '510.html', icon: 'extension_off', bg: '#F2DAFF', fg: '#251431', variant: 'installed' },
+      { id: '511.html', code: '511', title: 'Netzwerk-Authentifizierung erforderlich', cat: '5xx', tag: 'Network Authentication Required', file: '511.html', icon: 'wifi_lock', bg: '#F2DAFF', fg: '#251431', variant: 'installed' }
+    ];
+
+    let currentCat = 'all';
+
+    function setCat(cat) {
+      currentCat = cat;
+      document.querySelectorAll('#play-category-tabs .m3-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.cat === cat);
+      });
+      renderStore();
+    }
+
+    function renderStore() {
+      const q = (document.getElementById('play-search-input').value || '').trim().toLowerCase();
+
+      const filtered = CATALOG.filter(item => {
+        if (currentCat !== 'all' && item.cat !== currentCat) return false;
+        if (!q) return true;
+        return (
+          item.code.toLowerCase().includes(q) ||
+          item.title.toLowerCase().includes(q) ||
+          item.tag.toLowerCase().includes(q) ||
+          item.file.toLowerCase().includes(q)
+        );
+      });
+
+      document.getElementById('play-account-badge').textContent = `${filtered.length} / ${CATALOG.length} Seiten`;
+
+      const listEl = document.getElementById('play-app-list');
+      if (!filtered.length) {
+        listEl.innerHTML = `
+          <div class="app-store-card">
+            <div style="font-size:14px;color:var(--md-sys-color-on-surface-variant);">
+              Keine passenden Status- oder Fehlerseiten gefunden.
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => `
+        <div class="app-store-card">
+          <div class="app-store-left">
+            <div class="store-icon" style="background:${item.bg};color:${item.fg};">
+              <span class="material-symbols-rounded filled" style="font-size:26px;">${item.icon}</span>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:15px;">${item.title}</div>
+              <div class="store-meta">
+                <span class="code-badge">${item.code}</span>
+                <span>${item.tag}</span>
+                <span>·</span>
+                <span style="font-family:var(--font-mono);">${item.file}</span>
+              </div>
+            </div>
+          </div>
+          <a href="${item.file}" class="install-pill ${item.variant}">Öffnen</a>
+        </div>
+      `).join('');
+    }
+
+    renderStore();
+  </script>
+</body>
+</html>
