@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku – Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .sudoku-grid {
+      max-width: 378px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 4px;
+      padding: 10px;
+      border-radius: 20px;
+      background: var(--md-sys-color-surface-container-highest);
+    }
+    .s-cell {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+    }
+    .s-cell.fixed {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+    .s-cell.sel {
+      outline: 2px solid var(--md-sys-color-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <header class="app-topbar">
+      <div class="app-title-group">
+        <a href="play.html" class="icon-btn" title="Google Play">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </a>
+        <div>
+          <h1 style="font-size:21px;font-weight:700;">Sudoku</h1>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="sudoku-status">Zelle wählen & Zahl tippen</div>
+        </div>
+      </div>
+      <button class="m3-btn m3-btn-tonal" onclick="resetSudoku()">Neu</button>
+    </header>
+
+    <main class="app-main">
+      <div class="sudoku-grid" id="sudoku-board"></div>
+      <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:16px;">
+        <button class="m3-chip" onclick="setNum(1)">1</button>
+        <button class="m3-chip" onclick="setNum(2)">2</button>
+        <button class="m3-chip" onclick="setNum(3)">3</button>
+        <button class="m3-chip" onclick="setNum(4)">4</button>
+        <button class="m3-chip" onclick="setNum(5)">5</button>
+        <button class="m3-chip" onclick="setNum(6)">6</button>
+        <button class="m3-chip" onclick="setNum(7)">7</button>
+        <button class="m3-chip" onclick="setNum(8)">8</button>
+        <button class="m3-chip" onclick="setNum(9)">9</button>
+        <button class="m3-chip" onclick="setNum(0)">✕</button>
+      </div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+    const PUZZLE = [
+      5,3,0,0,7,0,0,0,0,
+      6,0,0,1,9,5,0,0,0,
+      0,9,8,0,0,0,0,6,0,
+      8,0,0,0,6,0,0,0,3,
+      4,0,0,8,0,3,0,0,1,
+      7,0,0,0,2,0,0,0,6,
+      0,6,0,0,0,0,2,8,0,
+      0,0,0,4,1,9,0,0,5,
+      0,0,0,0,8,0,0,7,9
+    ];
+    let board = [...PUZZLE];
+    let selected = 2;
+
+    function resetSudoku() {
+      board = [...PUZZLE];
+      document.getElementById('sudoku-status').textContent = 'Zelle wählen & Zahl tippen';
+      renderSudoku();
+    }
+
+    function setNum(n) {
+      if (PUZZLE[selected] !== 0) return;
+      board[selected] = n;
+      renderSudoku();
+    }
+
+    function renderSudoku() {
+      const el = document.getElementById('sudoku-board');
+      el.innerHTML = board.map((v, idx) => {
+        const fixed = PUZZLE[idx] !== 0;
+        const sel = idx === selected;
+        return `<button class="s-cell ${fixed ? 'fixed' : ''} ${sel ? 'sel' : ''}" onclick="selected=${idx};renderSudoku();">${v || ''}</button>`;
+      }).join('');
+    }
+
+    renderSudoku();
+  </script>
+</body>
+</html>

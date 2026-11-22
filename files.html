@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Files – Android</title>
+  <link rel="stylesheet" href="system.css">
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <header class="app-topbar">
+      <div class="app-title-group">
+        <a href="start.html" class="icon-btn" title="Start">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </a>
+        <div>
+          <h1 style="font-size:21px;font-weight:600;">Files</h1>
+          <div class="settings-item-sub" id="files-summary">Dokumente, Medien & Systemdateien</div>
+        </div>
+      </div>
+      <a href="docs.html" class="m3-btn m3-btn-tonal" style="padding:8px 14px;font-size:13px;">
+        <span class="material-symbols-rounded" style="font-size:18px;">description</span>
+        <span>Docs</span>
+      </a>
+    </header>
+
+    <main class="app-main">
+      <div class="settings-search-pill">
+        <span class="material-symbols-rounded" style="color:var(--md-sys-color-on-surface-variant);">search</span>
+        <input type="search" id="files-search" oninput="renderFiles()" placeholder="Dateien & Dokumente durchsuchen…">
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <button type="button" class="m3-chip active" data-fcat="all" onclick="setFileCat('all', this)">Alle</button>
+        <button type="button" class="m3-chip" data-fcat="docs" onclick="setFileCat('docs', this)">Docs</button>
+        <button type="button" class="m3-chip" data-fcat="media" onclick="setFileCat('media', this)">Galerie</button>
+        <button type="button" class="m3-chip" data-fcat="notes" onclick="setFileCat('notes', this)">Notizen</button>
+        <button type="button" class="m3-chip" data-fcat="system" onclick="setFileCat('system', this)">System</button>
+      </div>
+
+      <div class="m3-card" style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div>
+            <strong>Neues Dokument anlegen</strong>
+            <div class="settings-item-sub">Erstellt direkt einen Eintrag in Docs & Files</div>
+          </div>
+          <button type="button" class="m3-btn" onclick="createNewDocFromFiles()">
+            <span class="material-symbols-rounded" style="font-size:18px;">add</span>
+            <span>Neues Doc</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-group" id="files-list"></div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+    let activeCat = 'all';
+
+    function setFileCat(cat, btn) {
+      activeCat = cat;
+      document.querySelectorAll('[data-fcat]').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderFiles();
+    }
+
+    function createNewDocFromFiles() {
+      const st = AndroidOS.getState();
+      const idx = (st.docs || []).length + 1;
+      const newDoc = {
+        id: 'doc_' + Date.now(),
+        title: `Unbenanntes Dokument ${idx}`,
+        folder: 'Dokumente',
+        content: '',
+        updated: 'Gerade eben'
+      };
+      AndroidOS.updateState(s => {
+        s.docs = [newDoc, ...(Array.isArray(s.docs) ? s.docs : [])];
+      });
+      window.location.href = `docs.html?id=${encodeURIComponent(newDoc.id)}`;
+    }
+
+    function deleteDocById(id) {
+      AndroidOS.updateState(s => {
+        s.docs = (Array.isArray(s.docs) ? s.docs : []).filter(d => d.id !== id);
+      });
+      AndroidOS.showToast('Dokument gelöscht.');
+      renderFiles();
+    }
+
+    function renderFiles() {
+      const st = AndroidOS.getState();
+      const q = (document.getElementById('files-search').value || '').trim().toLowerCase();
+      const docs = Array.isArray(st.docs) ? st.docs : [];
+      const gal = Array.isArray(st.gallery) ? st.gallery : [];
+      const notes = Array.isArray(st.notes) ? st.notes : [];
+
+      const items = [];
+
+      docs.forEach(d => {
+        const chars = (d.content || '').length;
+        items.push({
+          cat: 'docs',
+          icon: 'description',
+          bg: '#D1E4FF',
+          fg: '#001D36',
+          title: `${d.title || 'Ohne Titel'}.doc`,
+          sub: `${d.folder || 'Dokumente'} · ${chars} Zeichen · ${d.updated || 'Heute'}`,
+          href: `docs.html?id=${encodeURIComponent(d.id)}`,
+          actionLabel: 'Öffnen',
+          deleteId: d.id
+        });
+      });
+
+      gal.forEach(g => {
+        items.push({
+          cat: 'media',
+          icon: 'image',
+          bg: '#B7E4C7',
+          fg: '#082115',
+          title: `${g.title || 'Bild'}.png`,
+          sub: `Galerie · ${g.tag || 'Medien'}`,
+          href: 'galerie.html',
+          actionLabel: 'Galerie'
+        });
+      });
+
+      notes.forEach(n => {
+        items.push({
+          cat: 'notes',
+          icon: 'edit_note',
+          bg: '#EADDFF',
+          fg: '#21005D',
+          title: `${n.title || 'Notiz'}.txt`,
+          sub: `Notizen · ${n.updated || 'Kürzlich'}`,
+          href: 'notizen.html',
+          actionLabel: 'Notizen'
+        });
+      });
+
+      items.push({
+        cat: 'system',
+        icon: 'data_object',
+        bg: '#FFDCBE',
+        fg: '#2C1600',
+        title: 'system-backup-state.json',
+        sub: `System · ${st.deviceName || 'Pixel 10'} · Lokaler Speicher`,
+        href: 'einstellungen.html',
+        actionLabel: 'Einstellungen'
+      });
+
+      const filtered = items.filter(it => {
+        const catOk = activeCat === 'all' || it.cat === activeCat;
+        const qOk = !q || (it.title + ' ' + it.sub).toLowerCase().includes(q);
+        return catOk && qOk;
+      });
+
+      document.getElementById('files-summary').textContent = `${docs.length} Docs · ${gal.length} Medien · ${notes.length} Notizen`;
+
+      const listEl = document.getElementById('files-list');
+      if (!filtered.length) {
+        listEl.innerHTML = `<div style="padding:18px;" class="settings-item-sub">Keine passenden Dateien gefunden.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(it => `
+        <div class="settings-item" style="justify-content:space-between;">
+          <a href="${it.href}" style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;text-decoration:none;color:inherit;">
+            <span class="settings-badge" style="background:${it.bg};color:${it.fg};">
+              <span class="material-symbols-rounded">${it.icon}</span>
+            </span>
+            <div style="min-width:0;flex:1;">
+              <div class="settings-item-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${it.title}</div>
+              <div class="settings-item-sub">${it.sub}</div>
+            </div>
+          </a>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+            <a href="${it.href}" class="m3-chip" style="padding:5px 12px;font-size:12px;text-decoration:none;">${it.actionLabel}</a>
+            ${it.deleteId ? `<button type="button" class="icon-btn" style="width:34px;height:34px;" onclick="deleteDocById('${it.deleteId}')" title="Löschen"><span class="material-symbols-rounded" style="font-size:18px;">delete</span></button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    renderFiles();
+  </script>
+</body>
+</html>

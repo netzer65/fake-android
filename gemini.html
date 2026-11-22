@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini – Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .chat-log {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 18px;
+      max-width: 85%;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .bubble.ai {
+      align-self: flex-start;
+      background: var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface);
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <header class="app-topbar">
+      <div class="app-title-group">
+        <a href="start.html" class="icon-btn" title="Start">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </a>
+        <div>
+          <h1 style="font-size:21px;font-weight:700;">Gemini</h1>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Lokaler KI-Assistent im Web-OS</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main" style="max-width:720px;">
+      <div class="chat-log" id="gemini-log">
+        <div class="bubble ai">
+          Hallo! Ich bin dein eingebauter Gemini-Assistent hier im Android Web OS. Frag mich nach dem Gerätestatus, öffne Apps oder teste Befehle wie „Dunkelmodus an“ oder „Fehlerbildschirm“.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="gemini-input" class="m3-input" placeholder="Nachricht an Gemini schreiben…" onkeydown="if(event.key==='Enter') sendGemini()">
+        <button class="m3-btn" onclick="sendGemini()">Senden</button>
+      </div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+
+    function appendBubble(role, text) {
+      const log = document.getElementById('gemini-log');
+      const div = document.createElement('div');
+      div.className = `bubble ${role}`;
+      div.textContent = text;
+      log.appendChild(div);
+      div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    function replyFor(prompt) {
+      const p = prompt.toLowerCase();
+      const st = AndroidOS.getState();
+      const bat = AndroidOS.getBatteryInfo(st);
+      if (p.includes('dunkel') || p.includes('dark')) {
+        const next = AndroidOS.updateState(s => { s.mode = s.mode === 'dark' ? 'light' : 'dark'; });
+        return `Dunkelmodus ist jetzt ${next.mode === 'dark' ? 'aktiviert' : 'deaktiviert'}.`;
+      }
+      if (p.includes('fehler') || p.includes('error')) {
+        setTimeout(() => { window.location.href = 'error.html'; }, 500);
+        return 'Ich öffne den System-Fehlerbildschirm (`error.html`)…';
+      }
+      if (p.includes('erdbeben') || p.includes('quake')) {
+        setTimeout(() => { window.location.href = 'erdbeben.html'; }, 500);
+        return 'Ich öffne die Erdbebenwarnung-Demo (`erdbeben.html`)…';
+      }
+      if (p.includes('akku') || p.includes('batterie') || p.includes('status')) {
+        return `Gerät: ${st.deviceName || 'Pixel 10'} · Akku: ${bat.level}% · Sprache: ${AndroidOS.getLang(st).toUpperCase()}.`;
+      }
+      return `Verstanden: „${prompt}“. Ich kann dir Infos zum aktuellen Systemzustand geben, den Dunkelmodus umschalten oder zu Apps wie Google, Play, Erdbeben oder dem Fehlerbildschirm wechseln.`;
+    }
+
+    function sendGemini() {
+      const inp = document.getElementById('gemini-input');
+      const text = inp.value.trim();
+      if (!text) return;
+      appendBubble('user', text);
+      inp.value = '';
+      setTimeout(() => appendBubble('ai', replyFor(text)), 180);
+    }
+  </script>
+</body>
+</html>

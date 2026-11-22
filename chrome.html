@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome – Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .chrome-omnibox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--md-sys-color-surface-container-highest);
+      border-radius: 999px;
+      padding: 6px 12px;
+      flex: 1;
+      border: 1px solid var(--md-sys-color-outline-variant);
+    }
+    .chrome-omnibox input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      outline: none;
+    }
+    .chrome-viewport {
+      min-height: 290px;
+      border-radius: 24px;
+      padding: 20px;
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <header class="app-topbar">
+      <a href="start.html" class="icon-btn" title="Start">
+        <span class="material-symbols-rounded">arrow_back</span>
+      </a>
+      <form class="chrome-omnibox" onsubmit="navigateChrome(event)">
+        <span class="material-symbols-rounded" style="font-size:18px;color:var(--md-sys-color-primary);">lock</span>
+        <input type="text" id="chrome-url" value="https://android16.local/start" aria-label="Adresse oder Suchbegriff">
+        <button type="submit" class="icon-btn" style="width:32px;height:32px;" title="Los">
+          <span class="material-symbols-rounded" style="font-size:18px;">arrow_forward</span>
+        </button>
+      </form>
+      <button type="button" class="icon-btn" onclick="bookmarkCurrentPage()" title="Lesezeichen">
+        <span class="material-symbols-rounded">bookmark_add</span>
+      </button>
+    </header>
+
+    <main class="app-main">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button type="button" class="m3-chip active" onclick="openPreset('https://android16.local/start')">Startseite</button>
+        <button type="button" class="m3-chip" onclick="openPreset('https://android16.local/news')">Tech & News</button>
+        <button type="button" class="m3-chip" onclick="openPreset('https://android16.local/docs')">System-Doku</button>
+        <button type="button" class="m3-chip" onclick="openPreset('https://android16.local/bookmarks')">Lesezeichen</button>
+      </div>
+
+      <div class="chrome-viewport" id="chrome-viewport"></div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>AndroidOS.requireUnlocked(true);</script>
+  <script>
+    AndroidOS.mountShell();
+
+    const PAGES = {
+      'https://android16.local/start': {
+        title: 'Android 16 Chrome – Schnellzugriff',
+        tag: 'lokal · sicher',
+        body: 'Willkommen in Chrome für Android Web OS. Wähle eine Schnellseite aus oder gib oben einen Suchbegriff bzw. eine Adresse ein.',
+        links: [
+          { label: 'Maps öffnen', href: 'maps.html' },
+          { label: 'Mini-Duolingo starten', href: 'duolingo.html' },
+          { label: 'Einstellungen öffnen', href: 'einstellungen.html' }
+        ]
+      },
+      'https://android16.local/news': {
+        title: 'System-Meldungen & Updates',
+        tag: 'Feed',
+        body: 'Liquid Glass („Glass“), Desktop-Modus, interaktive Status-/Nachrichtenleiste und Bedienungshilfen sind jetzt direkt im System integriert.',
+        links: [
+          { label: 'Design & Themes ansehen', href: 'einstellungen.html' },
+          { label: 'Kalender prüfen', href: 'kalender.html' }
+        ]
+      },
+      'https://android16.local/docs': {
+        title: 'Web-OS Architektur & Shortcuts',
+        tag: 'Referenz',
+        body: 'Alle Apps teilen ihren Zustand über localStorage. Dreifach-Tipp auf die Uhrzeit aktiviert den Zeit-Wirbel; „1616“ öffnet das Secret Lab.',
+        links: [
+          { label: 'Notizen öffnen', href: 'notizen.html' },
+          { label: 'Aufgaben öffnen', href: 'aufgaben.html' }
+        ]
+      }
+    };
+
+    function getBookmarks() {
+      const st = AndroidOS.getState();
+      return Array.isArray(st.chromeBookmarks) && st.chromeBookmarks.length
+        ? st.chromeBookmarks
+        : ['https://android16.local/start', 'https://android16.local/news'];
+    }
+
+    function bookmarkCurrentPage() {
+      const url = document.getElementById('chrome-url').value.trim() || 'https://android16.local/start';
+      AndroidOS.updateState(s => {
+        const cur = Array.isArray(s.chromeBookmarks) ? [...s.chromeBookmarks] : ['https://android16.local/start'];
+        if (!cur.includes(url)) cur.push(url);
+        s.chromeBookmarks = cur;
+      });
+      AndroidOS.showToast(`Lesezeichen gespeichert: ${url}`);
+    }
+
+    function openPreset(url) {
+      document.getElementById('chrome-url').value = url;
+      renderPage(url);
+    }
+
+    function navigateChrome(e) {
+      e.preventDefault();
+      let raw = document.getElementById('chrome-url').value.trim();
+      if (!raw) raw = 'https://android16.local/start';
+      if (!raw.startsWith('http://') && !raw.startsWith('https://')) {
+        raw = `https://android16.local/search?q=${encodeURIComponent(raw)}`;
+      }
+      document.getElementById('chrome-url').value = raw;
+      renderPage(raw);
+    }
+
+    function renderPage(url) {
+      const vp = document.getElementById('chrome-viewport');
+      if (url === 'https://android16.local/bookmarks') {
+        const bms = getBookmarks();
+        vp.innerHTML = `
+          <span class="status-pill">Lesezeichen (${bms.length})</span>
+          <h2 style="margin:10px 0 12px;font-size:20px;">Gespeicherte Seiten</h2>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${bms.map(u => `<button type="button" class="m3-btn m3-btn-tonal" style="justify-content:flex-start;" onclick="openPreset('${u.replace(/'/g, "\'")}')">${u}</button>`).join('')}
+          </div>
+        `;
+        return;
+      }
+
+      if (url.includes('/search?q=')) {
+        const q = decodeURIComponent(url.split('/search?q=')[1] || '');
+        vp.innerHTML = `
+          <span class="status-pill">Suche</span>
+          <h2 style="margin:10px 0 8px;font-size:20px;">Suchergebnisse für „${q}“</h2>
+          <p class="settings-item-sub" style="margin-bottom:14px;">Lokale Treffer im Gerät:</p>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <a href="maps.html" class="m3-btn m3-btn-tonal">In Maps nach „${q}“ suchen</a>
+            <a href="notizen.html" class="m3-btn m3-btn-tonal">In Notizen nachschlagen</a>
+            <a href="duolingo.html" class="m3-btn m3-btn-tonal">Vokabeln in Mini-Duolingo üben</a>
+          </div>
+        `;
+        return;
+      }
+
+      const page = PAGES[url] || {
+        title: url,
+        tag: 'Web-Ansicht',
+        body: `Geladene Adresse: ${url}. Alle System-Themes, Bedienungshilfen und der Desktop-Modus wirken direkt auf diese Ansicht.`,
+        links: [{ label: 'Zurück zur Startseite', href: 'start.html' }]
+      };
+
+      vp.innerHTML = `
+        <span class="status-pill">${page.tag}</span>
+        <h2 style="margin:10px 0 8px;font-size:20px;">${page.title}</h2>
+        <p style="font-size:14px;line-height:1.5;margin-bottom:16px;">${page.body}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${page.links.map(l => `<a href="${l.href}" class="m3-btn m3-btn-tonal">${l.label}</a>`).join('')}
+        </div>
+      `;
+    }
+
+    renderPage('https://android16.local/start');
+  </script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sperrbildschirm – Android</title>
+  <link rel="stylesheet" href="system.css">
+  <style>
+    .lock-wrap {
+      flex: 1;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 22px 68px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .lock-hero {
+      text-align: center;
+      padding: 18px 12px 6px;
+    }
+    .lock-clock {
+      font-family: var(--font-display);
+      font-size: clamp(54px, 13vw, 82px);
+      font-weight: 700;
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .lock-date {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-top: 8px;
+    }
+    .lock-target-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .pin-card {
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 28px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      min-height: 24px;
+      align-items: center;
+    }
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid var(--md-sys-color-primary);
+      background: transparent;
+      transition: background 0.14s ease, transform 0.14s ease;
+    }
+    .pin-dot.filled {
+      background: var(--md-sys-color-primary);
+      transform: scale(1.08);
+    }
+    .pin-error {
+      min-height: 20px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--md-sys-color-error);
+    }
+    .pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .pin-key {
+      height: 58px;
+      border-radius: 999px;
+      border: none;
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+    .pin-key:hover {
+      background: var(--md-sys-color-surface-container-highest);
+    }
+    .pin-key:active {
+      transform: scale(0.95);
+    }
+    .pin-key.primary {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      font-size: 15px;
+    }
+    .pin-key.tonal {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="android-shell">
+    <div id="sys-status-bar" class="status-bar"></div>
+    <div id="sys-qs-root"></div>
+
+    <main class="lock-wrap">
+      <div class="lock-hero">
+        <div class="lock-clock" id="lock-clock">--:--</div>
+        <div class="lock-date" id="lock-date"></div>
+        <div class="lock-target-pill" id="lock-target-badge" style="display:none;">
+          <span class="material-symbols-rounded" style="font-size:17px;">lock_open</span>
+          <span id="lock-target-text"></span>
+        </div>
+      </div>
+
+      <div class="pin-card">
+        <div style="text-align:center;">
+          <div style="font-weight:700;font-size:17px;" id="pin-title">PIN eingeben</div>
+          <div style="font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-top:3px;" id="pin-hint"></div>
+        </div>
+
+        <div class="pin-dots" id="pin-dots"></div>
+        <div class="pin-error" id="pin-error"></div>
+
+        <div class="pin-pad">
+          <button type="button" class="pin-key" onclick="pressDigit('1')">1</button>
+          <button type="button" class="pin-key" onclick="pressDigit('2')">2</button>
+          <button type="button" class="pin-key" onclick="pressDigit('3')">3</button>
+          <button type="button" class="pin-key" onclick="pressDigit('4')">4</button>
+          <button type="button" class="pin-key" onclick="pressDigit('5')">5</button>
+          <button type="button" class="pin-key" onclick="pressDigit('6')">6</button>
+          <button type="button" class="pin-key" onclick="pressDigit('7')">7</button>
+          <button type="button" class="pin-key" onclick="pressDigit('8')">8</button>
+          <button type="button" class="pin-key" onclick="pressDigit('9')">9</button>
+          <button type="button" class="pin-key tonal" onclick="clearPin()" id="pin-clear-btn">Löschen</button>
+          <button type="button" class="pin-key" onclick="pressDigit('0')">0</button>
+          <button type="button" class="pin-key primary" onclick="submitPin()" id="pin-unlock-btn">
+            <span class="material-symbols-rounded" style="font-size:19px;">arrow_forward</span>
+            <span id="pin-unlock-label">Entsperren</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <nav id="sys-gesture-nav" class="gesture-nav"></nav>
+  </div>
+
+  <script src="system.js"></script>
+  <script>
+    AndroidOS.mountShell({ showGestureBar: false, isLockscreen: true });
+
+    const st = AndroidOS.getState();
+    const params = new URLSearchParams(window.location.search);
+    const nextUrl = params.get('next') || 'start.html';
+    const hasPin = !!(st.lockPin && String(st.lockPin).trim().length > 0);
+
+    let enteredPin = '';
+
+    function refreshClock() {
+      const now = new Date();
+      const cur = AndroidOS.getState();
+      document.getElementById('lock-clock').textContent = AndroidOS.formatTime(now, cur);
+      document.getElementById('lock-date').textContent = AndroidOS.formatDate(now, cur);
+    }
+
+    function appNameFromHref(href) {
+      const clean = (href || '').split('?')[0];
+      const map = {
+        'start.html': 'Startbildschirm',
+        'uhr.html': 'Uhr',
+        'rechner.html': 'Rechner',
+        'notizen.html': 'Notizen',
+        'aufgaben.html': 'Aufgaben',
+        'umrechner.html': 'Umrechner',
+        'wetter.html': 'Wetter',
+        'kalender.html': 'Kalender',
+        'galerie.html': 'Galerie',
+        'kamera.html': 'Kamera',
+        'musik.html': 'Musik',
+        'kontakte.html': 'Kontakte',
+        'google.html': 'Google',
+        'gemini.html': 'Gemini',
+        'erdbeben.html': 'Erdbeben',
+        'error.html': 'Fehler',
+        'einstellungen.html': 'Einstellungen',
+        'game-2048.html': '2048',
+        'game-sudoku.html': 'Sudoku'
+      };
+      return map[clean] || clean;
+    }
+
+    function renderPinUI() {
+      const cur = AndroidOS.getState();
+      document.getElementById('pin-title').textContent = hasPin
+        ? AndroidOS.t('unlockPinTitle', cur)
+        : 'Sperrbildschirm';
+      document.getElementById('pin-hint').textContent = hasPin
+        ? 'PIN eingeben, um fortzufahren'
+        : 'Keine PIN gesetzt · Direkt entsperren oder PIN in den Einstellungen festlegen';
+      document.getElementById('pin-clear-btn').textContent = AndroidOS.t('clear', cur);
+      document.getElementById('pin-unlock-label').textContent = AndroidOS.t('unlock', cur);
+
+      if (nextUrl && nextUrl !== 'start.html') {
+        const badge = document.getElementById('lock-target-badge');
+        badge.style.display = 'inline-flex';
+        document.getElementById('lock-target-text').textContent =
+          `App öffnen nach Entsperren: ${appNameFromHref(nextUrl)}`;
+      }
+
+      const dotsEl = document.getElementById('pin-dots');
+      const count = hasPin ? Math.max(enteredPin.length, 4) : enteredPin.length;
+      const dots = [];
+      for (let i = 0; i < count; i++) {
+        dots.push(`<span class="pin-dot ${i < enteredPin.length ? 'filled' : ''}"></span>`);
+      }
+      dotsEl.innerHTML = dots.join('');
+    }
+
+    function pressDigit(d) {
+      if (enteredPin.length >= 12) return;
+      enteredPin += d;
+      document.getElementById('pin-error').textContent = '';
+      renderPinUI();
+      if (hasPin && enteredPin === String(st.lockPin)) {
+        completeUnlock();
+      }
+    }
+
+    function clearPin() {
+      enteredPin = '';
+      document.getElementById('pin-error').textContent = '';
+      renderPinUI();
+    }
+
+    function completeUnlock() {
+      AndroidOS.markUnlocked();
+      const safeTarget = (nextUrl && !nextUrl.includes('lockscreen.html') && !nextUrl.includes('bootscreen.html'))
+        ? nextUrl
+        : 'start.html';
+      window.location.replace(safeTarget);
+    }
+
+    function submitPin() {
+      if (!hasPin) {
+        completeUnlock();
+        return;
+      }
+      if (enteredPin === String(st.lockPin)) {
+        completeUnlock();
+      } else {
+        const cur = AndroidOS.getState();
+        document.getElementById('pin-error').textContent = AndroidOS.t('wrongPin', cur);
+        enteredPin = '';
+        renderPinUI();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (/^[0-9]$/.test(e.key)) {
+        pressDigit(e.key);
+      } else if (e.key === 'Backspace') {
+        enteredPin = enteredPin.slice(0, -1);
+        renderPinUI();
+      } else if (e.key === 'Enter') {
+        submitPin();
+      } else if (e.key === 'Escape') {
+        clearPin();
+      }
+    });
+
+    refreshClock();
+    setInterval(refreshClock, 1000);
+    renderPinUI();
+  </script>
+</body>
+</html>
