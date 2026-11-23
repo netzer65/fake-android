@@ -54,7 +54,9 @@ const AndroidOS = (() => {
       familyTitle: 'Family Link',
       familySub: (active, limit) => active ? `Aktiv · Tageslimit ${limit} Min.` : 'Verwaltet · Bildschirmzeit & App-Limits',
       systemTitle: 'System & Sicherung',
-      systemSub: 'Sprache, PIN, Backup, Neustart & Ausschalten',
+      systemSub: 'Sprache, PIN, Tastatur, Backup, Neustart & Ausschalten',
+      oskTitle: 'Bildschirmtastatur (Gboard-OSK)',
+      oskSub: 'Virtuelle Tastatur bei Fokus auf Textfeldern einblenden',
       saved: 'Gespeichert.'
     },
     en: {
@@ -102,7 +104,9 @@ const AndroidOS = (() => {
       familyTitle: 'Family Link',
       familySub: (active, limit) => active ? `Active · ${limit} min daily limit` : 'Supervised · Screen time & app limits',
       systemTitle: 'System & Backup',
-      systemSub: 'Language, PIN, backup, restart & power off',
+      systemSub: 'Language, PIN, keyboard, backup, restart & power off',
+      oskTitle: 'On-screen keyboard (Gboard OSK)',
+      oskSub: 'Show virtual keyboard when focusing text inputs',
       saved: 'Saved.'
     },
     fr: {
@@ -150,7 +154,9 @@ const AndroidOS = (() => {
       familyTitle: 'Family Link',
       familySub: (active, limit) => active ? `Actif · Limite ${limit} min/j` : 'Contrôle parental · Temps d’écran et applis',
       systemTitle: 'Système et sauvegarde',
-      systemSub: 'Langue, PIN, sauvegarde, redémarrer et éteindre',
+      systemSub: 'Langue, PIN, clavier, sauvegarde, redémarrer et éteindre',
+      oskTitle: 'Clavier virtuel (Gboard OSK)',
+      oskSub: 'Afficher le clavier à l’écran lors de la saisie',
       saved: 'Enregistré.'
     },
     es: {
@@ -198,7 +204,9 @@ const AndroidOS = (() => {
       familyTitle: 'Family Link',
       familySub: (active, limit) => active ? `Activo · Límite ${limit} min/día` : 'Supervisión · Tiempo de pantalla y apps',
       systemTitle: 'Sistema y copia de seguridad',
-      systemSub: 'Idioma, PIN, copia, reiniciar y apagar',
+      systemSub: 'Idioma, PIN, teclado, copia, reiniciar y apagar',
+      oskTitle: 'Teclado en pantalla (Gboard OSK)',
+      oskSub: 'Mostrar teclado virtual al enfocar campos de texto',
       saved: 'Guardado.'
     },
     ja: {
@@ -246,7 +254,9 @@ const AndroidOS = (() => {
       familyTitle: 'ファミリー リンク',
       familySub: (active, limit) => active ? `有効 · 1日${limit}分の上限` : '管理 · スクリーンタイムとアプリ制限',
       systemTitle: 'システムとバックアップ',
-      systemSub: '言語、PIN、バックアップ、再起動と電源オフ',
+      systemSub: '言語、PIN、キーボード、バックアップ、再起動と電源オフ',
+      oskTitle: '画面キーボード (Gboard OSK)',
+      oskSub: '入力欄フォーカス時に仮想キーボードを表示',
       saved: '保存しました。'
     }
   };
@@ -259,6 +269,7 @@ const AndroidOS = (() => {
       locked: true,
       lastUnlockedAt: 0,
       lockPin: '',
+      oskEnabled: false,
       deviceName: 'Pixel 10',
       userName: 'Guest',
       language: 'de',
@@ -425,7 +436,6 @@ const AndroidOS = (() => {
     }
   }
 
-
   function requireUnlocked(redirectToLock = true) {
     const st = getState();
     const unlocked = !st.locked && isUnlockedRecently(st);
@@ -558,32 +568,12 @@ const AndroidOS = (() => {
     });
   }
 
-
   function showToast(msg) {
     let el = document.getElementById('sys-toast');
     if (!el) {
       el = document.createElement('div');
       el.id = 'sys-toast';
-      el.style.cssText = [
-        'position:fixed',
-        'bottom:64px',
-        'left:50%',
-        'transform:translateX(-50%) translateY(16px)',
-        'z-index:120',
-        'background:var(--md-sys-color-inverse-surface, #313033)',
-        'color:var(--md-sys-color-inverse-on-surface, #F4EFF4)',
-        'padding:11px 18px',
-        'border-radius:999px',
-        'font-family:var(--font-sans)',
-        'font-size:13px',
-        'font-weight:600',
-        'box-shadow:0 8px 24px rgba(0,0,0,0.28)',
-        'opacity:0',
-        'pointer-events:none',
-        'transition:opacity 0.22s ease, transform 0.22s ease',
-        'max-width:90vw',
-        'text-align:center'
-      ].join(';');
+      el.style.cssText = [        'position:fixed',        'bottom:64px',        'left:50%',        'transform:translateX(-50%) translateY(16px)',        'z-index:120',        'background:var(--md-sys-color-inverse-surface, #313033)',        'color:var(--md-sys-color-inverse-on-surface, #F4EFF4)',        'padding:11px 18px',        'border-radius:999px',        'font-family:var(--font-sans)',        'font-size:13px',        'font-weight:600',        'box-shadow:0 8px 24px rgba(0,0,0,0.28)',        'opacity:0',        'pointer-events:none',        'transition:opacity 0.22s ease, transform 0.22s ease',        'max-width:90vw',        'text-align:center'      ].join(';');
       document.body.appendChild(el);
     }
     el.textContent = msg;
@@ -597,7 +587,6 @@ const AndroidOS = (() => {
       el.style.transform = 'translateX(-50%) translateY(16px)';
     }, 3200);
   }
-
 
   function mountDynamicIsland(isSetup = false) {
     if (isSetup) return;
@@ -680,6 +669,259 @@ const AndroidOS = (() => {
     dotEl.style.background = '#34D399';
   }
 
+  /* === Gboard-like Optional On-Screen Keyboard Controller === */
+  const ROWS_LETTERS = [    ['q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'ü'],
+    ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ö', 'ä'],
+    ['SHIFT', 'y', 'x', 'c', 'v', 'b', 'n', 'm', 'ß', 'BACKSPACE'],
+    ['?123', ',', 'SPACE', '.', 'ENTER']
+  ];
+
+  const ROWS_SYMBOLS = [    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'],
+    ['@', '#', '€', '%', '&', '*', '+', '/', '(', ')', '='],
+    ['!', '?', ':', ';', '"', "'", '_', '~', '[', 'BACKSPACE'],
+    ['ABC', ',', 'SPACE', '.', 'ENTER']
+  ];
+
+  let activeInput = null;
+  let shiftActive = false;
+  let symMode = false;
+  let oskEl = null;
+  let oskListenersAttached = false;
+
+  function isOskEnabled(state = getState()) {
+    return Boolean(state && state.oskEnabled);
+  }
+
+  function setOskEnabled(enabled) {
+    const next = updateState(s => {
+      s.oskEnabled = Boolean(enabled);
+    });
+    if (!next.oskEnabled) {
+      closeOsk();
+    } else if (activeInput && document.activeElement === activeInput) {
+      openOsk(activeInput);
+    }
+    return next.oskEnabled;
+  }
+
+  function isTextInput(el) {
+    if (!el || el.disabled || el.readOnly) return false;
+    if (el.closest && el.closest('#gboard-osk')) return false;
+    if (el.tagName === 'TEXTAREA') return true;
+    if (el.tagName === 'INPUT') {
+      const tType = (el.type || 'text').toLowerCase();
+      return ['text', 'search', 'email', 'url', 'tel', 'number', 'password'].includes(tType);
+    }
+    return Boolean(el.isContentEditable);
+  }
+
+  function dispatchInputEvents(el) {
+    el.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function insertTextAtCursor(el, text) {
+    if (el.isContentEditable) {
+      document.execCommand('insertText', false, text);
+      dispatchInputEvents(el);
+      return;
+    }
+    const start = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
+    const end = typeof el.selectionEnd === 'number' ? el.selectionEnd : el.value.length;
+    const val = String(el.value || '');
+    el.value = val.slice(0, start) + text + val.slice(end);
+    const nextPos = start + text.length;
+    try {
+      el.setSelectionRange(nextPos, nextPos);
+    } catch (_) {}
+    dispatchInputEvents(el);
+  }
+
+  function backspaceAtCursor(el) {
+    if (el.isContentEditable) {
+      document.execCommand('delete', false, null);
+      dispatchInputEvents(el);
+      return;
+    }
+    const start = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
+    const end = typeof el.selectionEnd === 'number' ? el.selectionEnd : el.value.length;
+    const val = String(el.value || '');
+    if (start !== end) {
+      el.value = val.slice(0, start) + val.slice(end);
+      try { el.setSelectionRange(start, start); } catch (_) {}
+      dispatchInputEvents(el);
+    } else if (start > 0) {
+      el.value = val.slice(0, start - 1) + val.slice(end);
+      try { el.setSelectionRange(start - 1, start - 1); } catch (_) {}
+      dispatchInputEvents(el);
+    }
+  }
+
+  function pressEnter(el) {
+    if (el.tagName === 'TEXTAREA' || el.isContentEditable) {
+      insertTextAtCursor(el, '\n');
+      return;
+    }
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
+    const form = el.form || (el.closest && el.closest('form'));
+    if (form && typeof form.requestSubmit === 'function') {
+      form.requestSubmit();
+    }
+    closeOsk();
+  }
+
+  function renderKeys() {
+    if (!oskEl) return;
+    const keysWrap = oskEl.querySelector('#gboard-keys');
+    const targetBadge = oskEl.querySelector('#gboard-target-name');
+    if (targetBadge && activeInput) {
+      const label = activeInput.placeholder || activeInput.ariaLabel || activeInput.id || activeInput.tagName.toLowerCase();
+      targetBadge.textContent = label;
+    }
+
+    const layout = symMode ? ROWS_SYMBOLS : ROWS_LETTERS;
+    keysWrap.innerHTML = layout.map(row => {
+      const rowHtml = row.map(key => {
+        if (key === 'SHIFT') {
+          return `<button type="button" class="gboard-key fn ${shiftActive ? 'active' : ''}" data-key="SHIFT" title="Groß/Klein"><span class="material-symbols-rounded" style="font-size:18px;">shift</span></button>`;
+        }
+        if (key === 'BACKSPACE') {
+          return `<button type="button" class="gboard-key fn" data-key="BACKSPACE" title="Löschen"><span class="material-symbols-rounded" style="font-size:18px;">backspace</span></button>`;
+        }
+        if (key === '?123') {
+          return `<button type="button" class="gboard-key fn" data-key="?123">?123</button>`;
+        }
+        if (key === 'ABC') {
+          return `<button type="button" class="gboard-key fn active" data-key="ABC">ABC</button>`;
+        }
+        if (key === 'SPACE') {
+          return `<button type="button" class="gboard-key space" data-key="SPACE">Leertaste</button>`;
+        }
+        if (key === 'ENTER') {
+          return `<button type="button" class="gboard-key enter" data-key="ENTER" title="Eingabe"><span class="material-symbols-rounded" style="font-size:19px;">keyboard_return</span></button>`;
+        }
+        const shown = !symMode && shiftActive ? key.toUpperCase() : key;
+        return `<button type="button" class="gboard-key" data-char="${encodeURIComponent(shown)}">${shown}</button>`;
+      }).join('');
+      return `<div class="gboard-row">${rowHtml}</div>`;
+    }).join('');
+  }
+
+  function ensureOskElement() {
+    if (oskEl && document.body.contains(oskEl)) return oskEl;
+    const shell = document.querySelector('.android-shell') || document.body;
+    oskEl = document.createElement('div');
+    oskEl.id = 'gboard-osk';
+    oskEl.className = 'gboard-osk';
+    oskEl.setAttribute('role', 'region');
+    oskEl.setAttribute('aria-label', 'Bildschirmtastatur');
+    oskEl.innerHTML = `
+      <div class="gboard-topstrip">
+        <span style="font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+          <span class="material-symbols-rounded" style="font-size:17px;">keyboard</span>
+          Gboard
+        </span>
+        <span class="gboard-target-pill" id="gboard-target-name">Eingabe</span>
+        <button type="button" class="icon-btn" id="gboard-close-btn" title="Tastatur ausblenden" style="width:30px;height:30px;">
+          <span class="material-symbols-rounded" style="font-size:18px;">keyboard_hide</span>
+        </button>
+      </div>
+      <div id="gboard-keys"></div>
+    `;
+
+    oskEl.addEventListener('mousedown', e => e.preventDefault());
+    oskEl.addEventListener('pointerdown', e => e.preventDefault());
+
+    oskEl.addEventListener('click', e => {
+      const closeBtn = e.target.closest('#gboard-close-btn');
+      if (closeBtn) {
+        closeOsk();
+        return;
+      }
+      const keyBtn = e.target.closest('.gboard-key');
+      if (!keyBtn || !activeInput) return;
+
+      const special = keyBtn.dataset.key;
+      if (special === 'SHIFT') {
+        shiftActive = !shiftActive;
+        renderKeys();
+        return;
+      }
+      if (special === '?123') {
+        symMode = true;
+        renderKeys();
+        return;
+      }
+      if (special === 'ABC') {
+        symMode = false;
+        renderKeys();
+        return;
+      }
+      if (special === 'BACKSPACE') {
+        backspaceAtCursor(activeInput);
+        return;
+      }
+      if (special === 'SPACE') {
+        insertTextAtCursor(activeInput, ' ');
+        return;
+      }
+      if (special === 'ENTER') {
+        pressEnter(activeInput);
+        return;
+      }
+      if (keyBtn.dataset.char !== undefined) {
+        const ch = decodeURIComponent(keyBtn.dataset.char);
+        insertTextAtCursor(activeInput, ch);
+        if (!symMode && shiftActive) {
+          shiftActive = false;
+          renderKeys();
+        }
+      }
+    });
+
+    shell.appendChild(oskEl);
+    renderKeys();
+    return oskEl;
+  }
+
+  function openOsk(inputEl) {
+    if (!isOskEnabled() || !isTextInput(inputEl)) return;
+    activeInput = inputEl;
+    const el = ensureOskElement();
+    renderKeys();
+    el.classList.add('open');
+    const shell = document.querySelector('.android-shell');
+    if (shell) shell.classList.add('osk-open');
+    try {
+      inputEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } catch (_) {}
+  }
+
+  function closeOsk() {
+    if (oskEl) oskEl.classList.remove('open');
+    const shell = document.querySelector('.android-shell');
+    if (shell) shell.classList.remove('osk-open');
+    activeInput = null;
+  }
+
+  function attachOskListeners() {
+    if (oskListenersAttached) return;
+    oskListenersAttached = true;
+
+    document.addEventListener('focusin', e => {
+      if (!isOskEnabled()) return;
+      if (isTextInput(e.target)) {
+        openOsk(e.target);
+      }
+    });
+
+    document.addEventListener('click', e => {
+      if (!oskEl || !oskEl.classList.contains('open')) return;
+      if (oskEl.contains(e.target) || isTextInput(e.target)) return;
+      closeOsk();
+    });
+  }
+
   function mountShell(options = {}) {
     const { showGestureBar = true, isLockscreen = false, isSetup = false } = options;
     const st = getState();
@@ -708,30 +950,30 @@ const AndroidOS = (() => {
         </div>
       `;
 
-    let clockTapCount = 0;
-    let clockTapTimer = null;
-    const sbClockEl = document.getElementById('sb-clock');
-    if (sbClockEl && !isSetup) {
-      sbClockEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        clockTapCount++;
-        clearTimeout(clockTapTimer);
-        clockTapTimer = setTimeout(() => { clockTapCount = 0; }, 700);
-        if (clockTapCount >= 3) {
-          clockTapCount = 0;
-          const next = updateState(s => {
-            s.easterEggClockSpin = !s.easterEggClockSpin;
-          });
-          document.documentElement.classList.toggle('ee-spin', !!next.easterEggClockSpin);
-          showToast(next.easterEggClockSpin
-            ? 'Easter Egg #1 aktiv: Zeit-Wirbel & Retro-Akzent!'
-            : 'Easter Egg #1 deaktiviert.');
-        }
-      });
-    }
-    if (st.easterEggClockSpin) {
-      document.documentElement.classList.add('ee-spin');
-    }
+      let clockTapCount = 0;
+      let clockTapTimer = null;
+      const sbClockEl = document.getElementById('sb-clock');
+      if (sbClockEl && !isSetup) {
+        sbClockEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          clockTapCount++;
+          clearTimeout(clockTapTimer);
+          clockTapTimer = setTimeout(() => { clockTapCount = 0; }, 700);
+          if (clockTapCount >= 3) {
+            clockTapCount = 0;
+            const next = updateState(s => {
+              s.easterEggClockSpin = !s.easterEggClockSpin;
+            });
+            document.documentElement.classList.toggle('ee-spin', !!next.easterEggClockSpin);
+            showToast(next.easterEggClockSpin
+              ? 'Easter Egg #1 aktiv: Zeit-Wirbel & Retro-Akzent!'
+              : 'Easter Egg #1 deaktiviert.');
+          }
+        });
+      }
+      if (st.easterEggClockSpin) {
+        document.documentElement.classList.add('ee-spin');
+      }
 
       statusEl.addEventListener('click', (e) => {
         if (isSetup) return;
@@ -853,6 +1095,9 @@ const AndroidOS = (() => {
       updateDynamicIsland();
     }
 
+    if (!isSetup) {
+      attachOskListeners();
+    }
     mountDynamicIsland(isSetup);
     syncDeviceBattery(() => {
       refreshStatusIcons();
@@ -901,6 +1146,10 @@ const AndroidOS = (() => {
     mountShell,
     mountDynamicIsland,
     updateDynamicIsland,
-    toggleQS
+    toggleQS,
+    isOskEnabled,
+    setOskEnabled,
+    openOsk,
+    closeOsk
   };
 })();
