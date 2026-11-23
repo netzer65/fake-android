@@ -13,19 +13,149 @@
       color: #FEF2F2;
       margin-bottom: 16px;
       border: 2px solid #FCA5A5;
+      transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
     }
     .quake-banner.safe {
       background: #14532D;
       color: #F0FDF4;
       border-color: #86EFAC;
     }
+    .quake-banner.moderate {
+      background: #7C2D12;
+      color: #FFF7ED;
+      border-color: #FDBA74;
+    }
+    .quake-banner.aftershock {
+      background: #713F12;
+      color: #FEFCE8;
+      border-color: #FDE047;
+    }
     .quake-pulse {
-      animation: quakeShake 0.45s ease-in-out 3;
+      animation: quakeShake 0.45s ease-in-out 4;
+    }
+    .aftershock-pulse {
+      animation: quakeShake 0.35s ease-in-out 2;
     }
     @keyframes quakeShake {
       0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      75% { transform: translateX(6px); }
+      20% { transform: translateX(-7px) rotate(-0.3deg); }
+      40% { transform: translateX(7px) rotate(0.3deg); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0 16px;
+    }
+    .telemetry-cell {
+      background: rgba(0, 0, 0, 0.24);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 16px;
+      padding: 10px 12px;
+    }
+    .telemetry-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.8;
+    }
+    .telemetry-val {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .status-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .live-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #22C55E;
+      display: inline-block;
+      margin-right: 6px;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.22);
+    }
+    .live-dot.alert {
+      background: #EF4444;
+      box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.3);
+      animation: dotBlink 0.8s infinite alternate;
+    }
+    .live-dot.aftershock {
+      background: #EAB308;
+      box-shadow: 0 0 0 5px rgba(234, 179, 8, 0.3);
+      animation: dotBlink 1s infinite alternate;
+    }
+    @keyframes dotBlink {
+      from { opacity: 1; }
+      to { opacity: 0.35; }
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      font-size: 14px;
+    }
+    .control-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 190px;
+    }
+    .range-wrap input[type="range"] {
+      width: 130px;
+      accent-color: var(--md-sys-color-primary);
+      cursor: pointer;
+    }
+    .range-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      min-width: 56px;
+      text-align: center;
+    }
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      font-size: 13px;
+    }
+    .log-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    @media (max-width: 520px) {
+      .telemetry-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -41,37 +171,127 @@
         </a>
         <div>
           <h1 style="font-size:21px;font-weight:700;">Erdbebenwarnung</h1>
-          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Android Earthquake Alerts (Demo)</div>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Android Earthquake Alerts · Systemdienst</div>
         </div>
       </div>
+      <div class="status-pill" id="alert-level-pill">Bereit</div>
     </header>
 
     <main class="app-main" style="max-width:680px;">
-      <div class="quake-banner safe" id="quake-box">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-          <span class="material-symbols-rounded filled" style="font-size:36px;" id="quake-icon">verified_user</span>
+      <div class="status-strip">
+        <div>
+          <span class="live-dot" id="sensor-dot"></span>
+          <strong id="sensor-status-text">Beschleunigungssensor &amp; Netzwerk aktiv</strong>
+        </div>
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="sys-clock-readout">--:--:--</span>
+      </div>
+
+      <div class="quake-banner safe" id="quake-box" role="alert" aria-live="assertive">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span class="material-symbols-rounded filled" style="font-size:38px;" id="quake-icon">verified_user</span>
           <div>
-            <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;opacity:0.9;">DEMO-WARNMODUS</div>
-            <h2 id="quake-title" style="font-size:22px;margin:0;">Keine akute Erschütterung</h2>
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;opacity:0.9;" id="quake-tag">SYSTEMÜBERWACHUNG · KEIN ALARM</div>
+            <h2 id="quake-title" style="font-size:22px;margin:2px 0 0;">Keine akute Erschütterung</h2>
           </div>
         </div>
-        <p id="quake-desc" style="font-size:14px;line-height:1.5;margin-bottom:14px;">
-          Starte eine Demo-Warnung, um Magnitude, geschätzte Ankunftszeit der Welle (P/S-Welle) und Schutzhinweise zu testen.
+
+        <p id="quake-desc" style="font-size:14px;line-height:1.5;margin-bottom:10px;">
+          Laufende Überwachung auf Bodenbewegungen. Starte einen Test-Alarm, um S-Wellen-Ankunft, Intensität und konfigurierte Nachbeben zu simulieren.
         </p>
+
+        <div class="telemetry-grid" id="quake-telemetry">
+          <div class="telemetry-cell">
+            <div class="telemetry-label" id="tel-lbl-1">S-Welle in</div>
+            <div class="telemetry-val" id="tel-countdown">–</div>
+          </div>
+          <div class="telemetry-cell">
+            <div class="telemetry-label" id="tel-lbl-2">Intensität (MMI)</div>
+            <div class="telemetry-val" id="tel-mmi">I · Nicht spürbar</div>
+          </div>
+          <div class="telemetry-cell">
+            <div class="telemetry-label" id="tel-lbl-3">Tiefe / Quelle</div>
+            <div class="telemetry-val" id="tel-source">Sensor-Netz</div>
+          </div>
+        </div>
+
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="m3-btn" style="background:#DC2626;color:#fff;" onclick="triggerDemoQuake(5.4, '18 km SSW')">Demo-Warnung (M 5,4)</button>
-          <button class="m3-btn m3-btn-tonal" onclick="triggerDemoQuake(3.8, '9 km NO')">Leichte Demo (M 3,8)</button>
+          <button class="m3-btn" style="background:#DC2626;color:#fff;" onclick="triggerDemoQuake(5.4, '18 km SSW', 8, '12 km')">Demo-Warnung (M 5,4)</button>
+          <button class="m3-btn m3-btn-tonal" onclick="triggerDemoQuake(3.8, '9 km NO', 5, '7 km')">Leichte Demo (M 3,8)</button>
           <button class="m3-btn m3-btn-outlined" style="color:inherit;border-color:currentColor;" onclick="resetQuakeDemo()">Entwarnung</button>
         </div>
       </div>
 
-      <div class="m3-card">
-        <h3 style="font-size:16px;margin-bottom:8px;">Schutzmaßnahmen bei Erschütterung</h3>
-        <ul style="padding-left:18px;font-size:14px;line-height:1.6;color:var(--md-sys-color-on-surface-variant);">
-          <li><strong>Ducken, decken, festhalten:</strong> Unter einen stabilen Tisch gehen oder Kopf schützen.</li>
-          <li>Von Glasflächen, hohen Regalen und schweren Gegenständen fernhalten.</li>
-          <li>Nach Ende der Erschütterung auf Nachbeben achten und Ausgänge prüfen.</li>
+      <div class="m3-card" style="margin-bottom:14px;">
+        <h3 style="font-size:16px;margin-bottom:4px;">Nachbeben-Konfiguration</h3>
+
+        <div class="control-row">
+          <div>
+            <div style="font-weight:600;">Anzahl automatischer Nachbeben</div>
+            <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">0 = deaktiviert · 1 bis 5 Nachbeben nach S-Welle</div>
+          </div>
+          <div class="range-wrap">
+            <input type="range" id="aftershock-count" min="0" max="5" step="1" value="2" oninput="updateAftershockConfig()">
+            <span class="range-badge" id="aftershock-count-val">2×</span>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div>
+            <div style="font-weight:600;">Nachbeben-Stärke (Offset / Zielwert)</div>
+            <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="aftershock-mag-hint">Abzug zur Hauptstärke (-1,2 M) oder Mindeststärke</div>
+          </div>
+          <div class="range-wrap">
+            <input type="range" id="aftershock-offset" min="0.4" max="2.5" step="0.1" value="1.2" oninput="updateAftershockConfig()">
+            <span class="range-badge" id="aftershock-offset-val">-1,2 M</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="m3-card" style="margin-bottom:14px;">
+        <h3 style="font-size:16px;margin-bottom:4px;">Audio &amp; Geräte-Bewegungssensor</h3>
+
+        <div class="control-row">
+          <div>
+            <div style="font-weight:600;">Web-Audio-Warnton</div>
+            <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="audio-status-desc">Akustischer Signalton bei Warnung, Ankunft &amp; Nachbeben</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="m3-btn m3-btn-tonal" id="btn-toggle-audio" onclick="toggleAudioAlert()">Ton: An</button>
+            <button class="m3-btn m3-btn-outlined" onclick="testAlertTone()">Ton testen</button>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div>
+            <div style="font-weight:600;">Geräte-Bewegungssensor (Motion)</div>
+            <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="motion-status-desc">Aus · Löst bei starkem Schütteln lokal aus</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="m3-btn m3-btn-tonal" id="btn-toggle-motion" onclick="toggleMotionSensor()">Sensor aktivieren</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="m3-card" style="margin-bottom:14px;">
+        <h3 style="font-size:16px;margin-bottom:8px;">Schutzmaßnahmen bei Erschütterung &amp; Nachbeben</h3>
+        <ul style="padding-left:18px;font-size:14px;line-height:1.6;color:var(--md-sys-color-on-surface-variant);margin:0;">
+          <li><strong>Ducken, decken, festhalten:</strong> Unter einen stabilen Tisch gehen oder Kopf und Nacken schützen.</li>
+          <li>Von Glasflächen, Fenstern, hohen Regalen und hängenden Objekten Abstand halten.</li>
+          <li><strong>Nachbeben beachten:</strong> Auch nach der Hauptwelle können schwächere Erschütterungen folgen – geschützt bleiben und Ausgänge prüfen.</li>
         </ul>
+      </div>
+
+      <div class="m3-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <h3 style="font-size:16px;margin:0;">Ereignisprotokoll</h3>
+          <span style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Lokal</span>
+        </div>
+        <div id="quake-log">
+          <div class="log-item">
+            <span>Systemdienst gestartet · Sensorik kalibriert</span>
+            <span style="font-family:var(--font-mono);font-size:12px;" id="init-time"></span>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -82,23 +302,385 @@
   <script>AndroidOS.requireUnlocked(true);</script>
   <script>
     AndroidOS.mountShell();
-    function triggerDemoQuake(mag, dist) {
+
+    let countdownTimer = null;
+    let aftershockTickTimer = null;
+    let aftershockEventTimers = [];
+    let remainingSec = 0;
+
+    let audioEnabled = true;
+    let audioCtx = null;
+    let sirenTimer = null;
+
+    let motionEnabled = false;
+    let lastMotionTrigger = 0;
+
+    function fmtMag(num) {
+      return Number(num).toFixed(1).replace('.', ',');
+    }
+
+    function nowTimeStr() {
+      return new Date().toLocaleTimeString('de-DE', { hour12: false });
+    }
+
+    function appendLog(text) {
+      const logEl = document.getElementById('quake-log');
+      const row = document.createElement('div');
+      row.className = 'log-item';
+      row.innerHTML = `<span>${text}</span><span style="font-family:var(--font-mono);font-size:12px;">${nowTimeStr()}</span>`;
+      logEl.prepend(row);
+      while (logEl.children.length > 6) {
+        logEl.removeChild(logEl.lastElementChild);
+      }
+    }
+
+    function clearAllTimers() {
+      clearInterval(countdownTimer);
+      clearInterval(aftershockTickTimer);
+      aftershockEventTimers.forEach(id => clearTimeout(id));
+      countdownTimer = null;
+      aftershockTickTimer = null;
+      aftershockEventTimers = [];
+    }
+
+    function getAftershockSettings() {
+      const count = parseInt(document.getElementById('aftershock-count').value, 10) || 0;
+      const offset = parseFloat(document.getElementById('aftershock-offset').value) || 1.2;
+      return { count, offset };
+    }
+
+    function updateAftershockConfig() {
+      const { count, offset } = getAftershockSettings();
+      document.getElementById('aftershock-count-val').textContent = `${count}×`;
+      document.getElementById('aftershock-offset-val').textContent = `-${fmtMag(offset)} M`;
+      document.getElementById('aftershock-mag-hint').textContent = count === 0
+        ? 'Automatische Nachbeben sind aktuell deaktiviert'
+        : `Hauptstärke minus ${fmtMag(offset)} M (leicht abklingend pro Nachbeben)`;
+    }
+
+    function updateClock() {
+      const el = document.getElementById('sys-clock-readout');
+      if (el) el.textContent = nowTimeStr();
+    }
+
+    function mmiForMag(mag) {
+      if (mag >= 5.0) return 'VI · Stark spürbar';
+      if (mag >= 4.0) return 'V · Deutlich spürbar';
+      if (mag >= 3.0) return 'III–IV · Leicht spürbar';
+      return 'II · Schwach spürbar';
+    }
+
+    function ensureAudioContext() {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      if (!audioCtx) {
+        audioCtx = new Ctx();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    function playBeep(freqStart = 880, freqEnd = 660, durationSec = 0.22, gainPeak = 0.22) {
+      if (!audioEnabled) return;
+      const ctx = ensureAudioContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freqStart, now);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(120, freqEnd), now + durationSec);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(gainPeak, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + durationSec + 0.02);
+    }
+
+    function startAlertSiren(urgent = true) {
+      stopAlertSiren();
+      if (!audioEnabled) return;
+      playBeep(urgent ? 960 : 780, urgent ? 620 : 540, 0.25, urgent ? 0.25 : 0.16);
+      let step = 0;
+      sirenTimer = setInterval(() => {
+        if (!audioEnabled) {
+          stopAlertSiren();
+          return;
+        }
+        step += 1;
+        playBeep(urgent ? 960 : 780, urgent ? 620 : 540, 0.22, urgent ? 0.24 : 0.15);
+        if (step >= (urgent ? 8 : 5)) {
+          stopAlertSiren();
+        }
+      }, 420);
+    }
+
+    function stopAlertSiren() {
+      if (sirenTimer) {
+        clearInterval(sirenTimer);
+        sirenTimer = null;
+      }
+    }
+
+    function testAlertTone() {
+      const prev = audioEnabled;
+      audioEnabled = true;
+      ensureAudioContext();
+      playBeep(880, 580, 0.24, 0.22);
+      setTimeout(() => playBeep(980, 640, 0.24, 0.22), 280);
+      setTimeout(() => { audioEnabled = prev; }, 650);
+    }
+
+    function toggleAudioAlert() {
+      audioEnabled = !audioEnabled;
+      if (audioEnabled) {
+        ensureAudioContext();
+      } else {
+        stopAlertSiren();
+      }
+      document.getElementById('btn-toggle-audio').textContent = audioEnabled ? 'Ton: An' : 'Ton: Aus';
+      document.getElementById('audio-status-desc').textContent = audioEnabled
+        ? 'Akustischer Signalton bei Warnung, Ankunft & Nachbeben'
+        : 'Stummgeschaltet · Nur visuelle Warnung';
+      appendLog(audioEnabled ? 'Web-Audio-Warnton aktiviert' : 'Web-Audio-Warnton deaktiviert');
+    }
+
+    function handleDeviceMotion(event) {
+      if (!motionEnabled) return;
+      const acc = event.acceleration || event.accelerationIncludingGravity;
+      if (!acc) return;
+
+      const x = acc.x || 0;
+      const y = acc.y || 0;
+      const z = acc.z || 0;
+
+      let delta;
+      if (event.acceleration && (acc.x !== null || acc.y !== null || acc.z !== null)) {
+        delta = Math.sqrt(x * x + y * y + z * z);
+      } else {
+        const magG = Math.sqrt(x * x + y * y + z * z);
+        delta = Math.abs(magG - 9.81);
+      }
+
+      const threshold = 11.5;
+      const now = Date.now();
+      if (delta >= threshold && now - lastMotionTrigger > 4500) {
+        lastMotionTrigger = now;
+        const estMag = Math.min(6.5, Math.max(3.2, Number((3.0 + delta / 5.5).toFixed(1))));
+        appendLog(`Sensor-Erschütterung erkannt (${delta.toFixed(1)} m/s²)`);
+        triggerDemoQuake(estMag, 'Lokaler Sensor', 2, 'Sensor');
+      }
+    }
+
+    async function toggleMotionSensor() {
+      const btn = document.getElementById('btn-toggle-motion');
+      const desc = document.getElementById('motion-status-desc');
+
+      if (!motionEnabled) {
+        if (!('DeviceMotionEvent' in window)) {
+          desc.textContent = 'Nicht unterstützt · Dieser Browser bietet keinen Bewegungssensor';
+          appendLog('Bewegungssensor auf diesem Gerät nicht verfügbar');
+          return;
+        }
+
+        try {
+          if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            const perm = await DeviceMotionEvent.requestPermission();
+            if (perm !== 'granted') {
+              desc.textContent = 'Berechtigung verweigert · Bewegungssensor inaktiv';
+              appendLog('Sensorberechtigung nicht erteilt');
+              return;
+            }
+          }
+          window.addEventListener('devicemotion', handleDeviceMotion);
+          motionEnabled = true;
+          btn.textContent = 'Sensor aus';
+          desc.textContent = 'Aktiv · Überwacht Beschleunigung (Schwellenwert 11,5 m/s²)';
+          appendLog('Geräte-Bewegungssensor aktiviert');
+        } catch (err) {
+          desc.textContent = 'Sensor konnte nicht gestartet werden (ggf. HTTPS erforderlich)';
+          appendLog('Fehler beim Aktivieren des Bewegungssensors');
+        }
+      } else {
+        window.removeEventListener('devicemotion', handleDeviceMotion);
+        motionEnabled = false;
+        btn.textContent = 'Sensor aktivieren';
+        desc.textContent = 'Aus · Löst bei starkem Schütteln lokal aus';
+        appendLog('Geräte-Bewegungssensor deaktiviert');
+      }
+    }
+
+    function runAftershockSequence(mainMag, dist, depth, count, offset) {
+      if (count <= 0) {
+        appendLog('Keine automatischen Nachbeben konfiguriert (0×)');
+        return;
+      }
+
+      const intervalSec = 4;
+      let totalWindowSec = count * intervalSec;
+      let hitIndex = 0;
+
       const box = document.getElementById('quake-box');
-      box.classList.remove('safe');
-      box.classList.remove('quake-pulse');
+      const dot = document.getElementById('sensor-dot');
+      const pill = document.getElementById('alert-level-pill');
+
+      box.classList.remove('safe', 'moderate', 'quake-pulse');
+      box.classList.add('aftershock');
+      dot.classList.remove('alert');
+      dot.classList.add('aftershock');
+      document.getElementById('sensor-status-text').textContent = `Nachbeben-Sequenz aktiv (${count} geplant)`;
+      pill.textContent = `NACHBEBEN 0/${count}`;
+
+      document.getElementById('quake-icon').textContent = 'sensors';
+      document.getElementById('quake-tag').textContent = `NACHBEBEN-PHASE · ${count} STOSS GEPLANT`;
+      document.getElementById('quake-title').textContent = `NACHBEBEN-PHASE · Bis zu ${count} Erschütterungen`;
+      document.getElementById('quake-desc').textContent = `Hauptwelle durchlaufen (${dist}). ${count} automatische Nachbeben (Offset -${fmtMag(offset)} M) werden simuliert.`;
+
+      document.getElementById('tel-lbl-1').textContent = 'Fensterende in';
+      document.getElementById('tel-lbl-2').textContent = 'Nächste Stärke';
+      document.getElementById('tel-lbl-3').textContent = 'Bezug / Tiefe';
+
+      const firstMag = Math.max(1.8, Number((mainMag - offset).toFixed(1)));
+      document.getElementById('tel-countdown').textContent = `${totalWindowSec} s`;
+      document.getElementById('tel-mmi').textContent = `M ${fmtMag(firstMag)} · ${mmiForMag(firstMag)}`;
+      document.getElementById('tel-source').textContent = `${dist} · ${depth}`;
+
+      appendLog(`Nachbeben-Phase gestartet: ${count}× mit Offset -${fmtMag(offset)} M`);
+
+      for (let i = 1; i <= count; i++) {
+        const delayMs = (i - 1) * intervalSec * 1000 + 800;
+        const shockMag = Math.max(1.5, Number((mainMag - offset - (i - 1) * 0.25).toFixed(1)));
+
+        const tid = setTimeout(() => {
+          hitIndex = i;
+          box.classList.remove('aftershock-pulse');
+          void box.offsetWidth;
+          box.classList.add('aftershock-pulse');
+
+          pill.textContent = `NACHBEBEN ${i}/${count}`;
+          document.getElementById('quake-title').textContent = `NACHBEBEN ${i}/${count} · Stärke M ${fmtMag(shockMag)}`;
+          document.getElementById('quake-desc').textContent = `Nachbeben #${i} von ${count} registriert (${dist}). Geschützt bleiben und auf weitere Erschütterungen achten.`;
+          document.getElementById('tel-mmi').textContent = `M ${fmtMag(shockMag)} · ${mmiForMag(shockMag)}`;
+
+          playBeep(740 - i * 45, 470 - i * 30, 0.22, 0.17);
+          appendLog(`Nachbeben ${i}/${count} mit M ${fmtMag(shockMag)} (${dist})`);
+        }, delayMs);
+
+        aftershockEventTimers.push(tid);
+      }
+
+      aftershockTickTimer = setInterval(() => {
+        totalWindowSec -= 1;
+        if (totalWindowSec > 0) {
+          document.getElementById('tel-countdown').textContent = `${totalWindowSec} s`;
+        } else {
+          clearInterval(aftershockTickTimer);
+          aftershockTickTimer = null;
+          document.getElementById('tel-countdown').textContent = 'FERTIG';
+          pill.textContent = 'ABGESCHLOSSEN';
+          document.getElementById('quake-desc').textContent = `Alle ${hitIndex || count} Nachbeben-Ereignisse durchlaufen. Lage prüfen oder Entwarnung auslösen.`;
+          appendLog('Nachbeben-Sequenz abgeschlossen');
+        }
+      }, 1000);
+    }
+
+    function triggerDemoQuake(mag, dist, sec, depth) {
+      clearAllTimers();
+      remainingSec = sec;
+      const { count, offset } = getAftershockSettings();
+
+      const box = document.getElementById('quake-box');
+      const dot = document.getElementById('sensor-dot');
+      const pill = document.getElementById('alert-level-pill');
+
+      box.classList.remove('safe', 'moderate', 'aftershock', 'quake-pulse', 'aftershock-pulse');
+      if (mag < 4.5) box.classList.add('moderate');
       void box.offsetWidth;
       box.classList.add('quake-pulse');
+
+      dot.classList.remove('aftershock');
+      dot.classList.add('alert');
+      document.getElementById('sensor-status-text').textContent = 'Erschütterungsalarm ausgelöst';
+      pill.textContent = mag >= 4.5 ? 'ALARM' : 'WARNUNG';
+
+      document.getElementById('tel-lbl-1').textContent = 'S-Welle in';
+      document.getElementById('tel-lbl-2').textContent = 'Intensität (MMI)';
+      document.getElementById('tel-lbl-3').textContent = 'Tiefe / Quelle';
+
       document.getElementById('quake-icon').textContent = 'vibration';
-      document.getElementById('quake-title').textContent = `WARNUNG · Geschätzte Stärke M ${String(mag).replace('.', ',')}`;
-      document.getElementById('quake-desc').textContent = `Simuliertes Epizentrum ca. ${dist} entfernt · Leichte bis spürbare Erschütterung möglich. Sofort in Sicherheit bringen!`;
+      document.getElementById('quake-tag').textContent = mag >= 4.5 ? 'NOTFALLWARNUNG · S-WELLE ERWARTET' : 'ERSCHÜTTERUNGSWARNUNG · AKTIV';
+      document.getElementById('quake-title').textContent = `WARNUNG · Geschätzte Stärke M ${fmtMag(mag)}`;
+      document.getElementById('quake-desc').textContent = `Epizentrum ca. ${dist} (${depth} Tiefe). Sofort Schutzposition einnehmen (${count} Nachbeben geplant).`;
+
+      document.getElementById('tel-mmi').textContent = mmiForMag(mag);
+      document.getElementById('tel-source').textContent = `${dist} · ${depth}`;
+      document.getElementById('tel-countdown').textContent = `${remainingSec} s`;
+
+      startAlertSiren(mag >= 4.5);
+      appendLog(`Warnung M ${fmtMag(mag)} (${dist}, S-Welle ~${sec}s)`);
+
+      countdownTimer = setInterval(() => {
+        remainingSec -= 1;
+        if (remainingSec > 0) {
+          document.getElementById('tel-countdown').textContent = `${remainingSec} s`;
+        } else {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          document.getElementById('tel-countdown').textContent = 'JETZT';
+          document.getElementById('quake-desc').textContent = `Welle erreicht den Standort (${dist}). Ducken, decken, festhalten – Nachbeben-Phase folgt.`;
+          playBeep(1040, 520, 0.35, 0.25);
+          appendLog(`S-Welle am Standort eingetroffen (${dist})`);
+
+          const nextTid = setTimeout(() => {
+            runAftershockSequence(mag, dist, depth, count, offset);
+          }, 2200);
+          aftershockEventTimers.push(nextTid);
+        }
+      }, 1000);
     }
+
     function resetQuakeDemo() {
+      clearAllTimers();
+      stopAlertSiren();
       const box = document.getElementById('quake-box');
+      const dot = document.getElementById('sensor-dot');
+      const pill = document.getElementById('alert-level-pill');
+
+      box.classList.remove('moderate', 'aftershock', 'quake-pulse', 'aftershock-pulse');
       box.classList.add('safe');
+      dot.classList.remove('alert', 'aftershock');
+      document.getElementById('sensor-status-text').textContent = 'Beschleunigungssensor & Netzwerk aktiv';
+      pill.textContent = 'Bereit';
+
+      document.getElementById('tel-lbl-1').textContent = 'S-Welle in';
+      document.getElementById('tel-lbl-2').textContent = 'Intensität (MMI)';
+      document.getElementById('tel-lbl-3').textContent = 'Tiefe / Quelle';
+
       document.getElementById('quake-icon').textContent = 'verified_user';
+      document.getElementById('quake-tag').textContent = 'SYSTEMÜBERWACHUNG · KEIN ALARM';
       document.getElementById('quake-title').textContent = 'Keine akute Erschütterung';
-      document.getElementById('quake-desc').textContent = 'Demo-Warnung zurückgesetzt. Keine aktive Erschütterung erkannt.';
+      document.getElementById('quake-desc').textContent = 'Warnung zurückgesetzt. Aktive Sensorüberwachung läuft ohne Auffälligkeiten.';
+
+      document.getElementById('tel-countdown').textContent = '–';
+      document.getElementById('tel-mmi').textContent = 'I · Nicht spürbar';
+      document.getElementById('tel-source').textContent = 'Sensor-Netz';
+
+      appendLog('Entwarnung · Normalbetrieb wiederhergestellt');
     }
+
+    updateAftershockConfig();
+    document.getElementById('init-time').textContent = nowTimeStr();
+    updateClock();
+    setInterval(updateClock, 1000);
   </script>
 </body>
 </html>
