@@ -689,6 +689,7 @@ const AndroidOS = (() => {
   let symMode = false;
   let oskEl = null;
   let oskListenersAttached = false;
+  let lastOskKeyClickAt = 0;
 
   function isOskEnabled(state = getState()) {
     return Boolean(state && state.oskEnabled);
@@ -861,6 +862,8 @@ const AndroidOS = (() => {
       const keyBtn = e.target.closest('.gboard-key');
       if (!keyBtn || !activeInput) return;
 
+      lastOskKeyClickAt = Date.now();
+
       const special = keyBtn.dataset.key;
       if (special === 'SHIFT') {
         shiftActive = !shiftActive;
@@ -994,7 +997,11 @@ const AndroidOS = (() => {
 
     document.addEventListener('click', e => {
       if (!oskEl || !oskEl.classList.contains('open')) return;
-      if (oskEl.contains(e.target) || isTextInput(e.target)) return;
+      if (Date.now() - lastOskKeyClickAt < 80) return;
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+      if (path.includes(oskEl) || (e.target && e.target.isConnected && (oskEl.contains(e.target) || isTextInput(e.target)))) {
+        return;
+      }
       closeOsk();
     });
 
@@ -1011,7 +1018,7 @@ const AndroidOS = (() => {
       window.visualViewport.addEventListener('scroll', syncOskViewport);
     }
   }
-
+  
   function mountShell(options = {}) {
     const { showGestureBar = true, isLockscreen = false, isSetup = false } = options;
     const st = getState();
