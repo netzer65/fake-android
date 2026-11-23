@@ -6,11 +6,41 @@
   <title>Wetter – Android</title>
   <link rel="stylesheet" href="system.css">
   <style>
+    .city-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .weather-search {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .hourly-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 18px;
+    }
+    .hour-card {
+      min-width: 82px;
+      text-align: center;
+      padding: 12px 10px;
+      border-radius: 18px;
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      flex-shrink: 0;
+    }
     .forecast-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
       gap: 12px;
-      margin-top: 16px;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -26,22 +56,31 @@
         </a>
         <div>
           <h1 style="font-size:22px;font-weight:700;">Wetter</h1>
-          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Aktuelle Vorhersage</div>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="w-subtitle">Aktuelle Vorhersage</div>
         </div>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button class="m3-chip active" onclick="selectCity('Nordhorn', 11, 'Heiter bis wolkig', 'Luftfeuchtigkeit 62 % · Wind 14 km/h', this)">Nordhorn</button>
-        <button class="m3-chip" onclick="selectCity('Mönchengladbach', 12, 'Leicht bewölkt', 'Luftfeuchtigkeit 58 % · Wind 11 km/h', this)">Mönchengladbach</button>
-        <button class="m3-chip" onclick="selectCity('Berlin', 9, 'Klar & frisch', 'Luftfeuchtigkeit 54 % · Wind 16 km/h', this)">Berlin</button>
-      </div>
+      <button class="m3-chip" id="unit-toggle-btn" onclick="toggleUnit()" title="Einheit wechseln">°C</button>
     </header>
 
     <main class="app-main">
-      <div class="m3-card-filled" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;margin-bottom:18px;">
-        <div>
-          <div id="w-city" style="font-size:16px;font-weight:700;color:var(--md-sys-color-primary);">Nordhorn</div>
-          <div id="w-temp" style="font-size:64px;font-weight:700;line-height:1.05;">11 °C</div>
-          <div id="w-desc" style="font-size:16px;font-weight:600;margin-top:4px;">Heiter bis wolkig</div>
+      <div class="city-bar" id="city-chips"></div>
+
+      <div class="weather-search">
+        <input type="text" id="city-search-input" class="m3-input" style="flex:1;min-width:180px;" placeholder="Ort suchen (z. B. Hamburg, Güntringen, Krakenku)...">
+        <button class="m3-btn m3-btn-tonal" onclick="searchOrAddCity()">
+          <span class="material-symbols-rounded" style="font-size:18px;">search</span>
+          <span>Anzeigen</span>
+        </button>
+      </div>
+
+      <div class="m3-card-filled" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <span class="material-symbols-rounded filled" id="w-main-icon" style="font-size:54px;color:var(--md-sys-color-primary);">partly_cloudy_day</span>
+          <div>
+            <div id="w-city" style="font-size:16px;font-weight:700;color:var(--md-sys-color-primary);">Nordhorn</div>
+            <div id="w-temp" style="font-size:60px;font-weight:700;line-height:1.05;">11 °C</div>
+            <div id="w-desc" style="font-size:16px;font-weight:600;margin-top:4px;">Heiter bis wolkig</div>
+          </div>
         </div>
         <div class="m3-card" style="max-width:340px;">
           <div style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--md-sys-color-primary);margin-bottom:6px;">
@@ -54,29 +93,11 @@
         </div>
       </div>
 
-      <h2 style="font-size:18px;margin-bottom:8px;">4-Tage-Vorschau</h2>
-      <div class="forecast-grid">
-        <div class="m3-card" style="text-align:center;">
-          <div style="font-weight:700;margin-bottom:8px;">Heute</div>
-          <span class="material-symbols-rounded filled" style="font-size:32px;color:var(--md-sys-color-primary);">partly_cloudy_day</span>
-          <div style="font-size:20px;font-weight:700;margin-top:8px;">11° / 5°</div>
-        </div>
-        <div class="m3-card" style="text-align:center;">
-          <div style="font-weight:700;margin-bottom:8px;">Morgen</div>
-          <span class="material-symbols-rounded filled" style="font-size:32px;color:var(--md-sys-color-primary);">rainy</span>
-          <div style="font-size:20px;font-weight:700;margin-top:8px;">9° / 4°</div>
-        </div>
-        <div class="m3-card" style="text-align:center;">
-          <div style="font-weight:700;margin-bottom:8px;">Dienstag</div>
-          <span class="material-symbols-rounded filled" style="font-size:32px;color:var(--md-sys-color-primary);">wb_sunny</span>
-          <div style="font-size:20px;font-weight:700;margin-top:8px;">12° / 4°</div>
-        </div>
-        <div class="m3-card" style="text-align:center;">
-          <div style="font-weight:700;margin-bottom:8px;">Mittwoch</div>
-          <span class="material-symbols-rounded filled" style="font-size:32px;color:var(--md-sys-color-primary);">cloud</span>
-          <div style="font-size:20px;font-weight:700;margin-top:8px;">10° / 6°</div>
-        </div>
-      </div>
+      <h2 style="font-size:16px;margin-bottom:8px;">Heute im Verlauf</h2>
+      <div class="hourly-strip" id="hourly-strip"></div>
+
+      <h2 style="font-size:18px;margin-bottom:4px;">4-Tage-Vorschau</h2>
+      <div class="forecast-grid" id="forecast-grid"></div>
     </main>
 
     <nav id="sys-gesture-nav" class="gesture-nav"></nav>
@@ -86,14 +107,189 @@
   <script>AndroidOS.requireUnlocked(true);</script>
   <script>
     AndroidOS.mountShell();
-    function selectCity(city, temp, desc, detail, btn) {
-      document.querySelectorAll('.app-topbar .m3-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('w-city').textContent = city;
-      document.getElementById('w-temp').textContent = temp + ' °C';
-      document.getElementById('w-desc').textContent = desc;
-      document.getElementById('w-detail').textContent = detail;
+
+    const CITY_PRESETS = {
+      'Nordhorn': {
+        tempC: 11,
+        icon: 'partly_cloudy_day',
+        desc: 'Heiter bis wolkig',
+        detail: 'Luftfeuchtigkeit 62 % · Wind 14 km/h aus Südwest.',
+        hourly: [
+          { time: '09:00', icon: 'cloud', tempC: 7 },
+          { time: '12:00', icon: 'partly_cloudy_day', tempC: 10 },
+          { time: '15:00', icon: 'partly_cloudy_day', tempC: 11 },
+          { time: '18:00', icon: 'cloud', tempC: 8 },
+          { time: '21:00', icon: 'nights_stay', tempC: 6 }
+        ],
+        days: [
+          { day: 'Heute', icon: 'partly_cloudy_day', highC: 11, lowC: 5 },
+          { day: 'Morgen', icon: 'rainy', highC: 9, lowC: 4 },
+          { day: 'Übermorgen', icon: 'wb_sunny', highC: 12, lowC: 4 },
+          { day: 'Tag 4', icon: 'cloud', highC: 10, lowC: 6 }
+        ]
+      },
+      'Mönchengladbach': {
+        tempC: 12,
+        icon: 'cloud',
+        desc: 'Leicht bewölkt',
+        detail: 'Luftfeuchtigkeit 58 % · Wind 11 km/h aus West.',
+        hourly: [
+          { time: '09:00', icon: 'partly_cloudy_day', tempC: 8 },
+          { time: '12:00', icon: 'cloud', tempC: 11 },
+          { time: '15:00', icon: 'cloud', tempC: 12 },
+          { time: '18:00', icon: 'partly_cloudy_day', tempC: 9 },
+          { time: '21:00', icon: 'nights_stay', tempC: 7 }
+        ],
+        days: [
+          { day: 'Heute', icon: 'cloud', highC: 12, lowC: 6 },
+          { day: 'Morgen', icon: 'partly_cloudy_day', highC: 13, lowC: 5 },
+          { day: 'Übermorgen', icon: 'rainy', highC: 10, lowC: 5 },
+          { day: 'Tag 4', icon: 'wb_sunny', highC: 14, lowC: 6 }
+        ]
+      },
+      'Berlin': {
+        tempC: 9,
+        icon: 'wb_sunny',
+        desc: 'Klar & frisch',
+        detail: 'Luftfeuchtigkeit 54 % · Wind 16 km/h aus Ost.',
+        hourly: [
+          { time: '09:00', icon: 'wb_sunny', tempC: 5 },
+          { time: '12:00', icon: 'wb_sunny', tempC: 8 },
+          { time: '15:00', icon: 'partly_cloudy_day', tempC: 9 },
+          { time: '18:00', icon: 'cloud', tempC: 6 },
+          { time: '21:00', icon: 'nights_stay', tempC: 3 }
+        ],
+        days: [
+          { day: 'Heute', icon: 'wb_sunny', highC: 9, lowC: 2 },
+          { day: 'Morgen', icon: 'partly_cloudy_day', highC: 10, lowC: 3 },
+          { day: 'Übermorgen', icon: 'cloud', highC: 8, lowC: 2 },
+          { day: 'Tag 4', icon: 'rainy', highC: 7, lowC: 3 }
+        ]
+      }
+    };
+
+    let useFahrenheit = false;
+    let currentCity = 'Nordhorn';
+
+    function formatTemp(tempC) {
+      if (useFahrenheit) {
+        return `${Math.round((tempC * 9) / 5 + 32)} °F`;
+      }
+      return `${Math.round(tempC)} °C`;
     }
+
+    function formatShortTemp(tempC) {
+      if (useFahrenheit) {
+        return `${Math.round((tempC * 9) / 5 + 32)}°`;
+      }
+      return `${Math.round(tempC)}°`;
+    }
+
+    function buildSyntheticCity(name) {
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+      }
+      const baseTemp = 5 + (hash % 13);
+      const hum = 48 + (hash % 34);
+      const wind = 8 + (hash % 18);
+      const conditions = [
+        { desc: 'Heiter bis wolkig', icon: 'partly_cloudy_day' },
+        { desc: 'Sonnig & mild', icon: 'wb_sunny' },
+        { desc: 'Leichter Regen', icon: 'rainy' },
+        { desc: 'Überwiegend bewölkt', icon: 'cloud' }
+      ];
+      const cond = conditions[hash % conditions.length];
+
+      return {
+        tempC: baseTemp,
+        icon: cond.icon,
+        desc: cond.desc,
+        detail: `Luftfeuchtigkeit ${hum} % · Wind ${wind} km/h · Lokale Simulation`,
+        hourly: [
+          { time: '09:00', icon: 'cloud', tempC: baseTemp - 3 },
+          { time: '12:00', icon: cond.icon, tempC: baseTemp - 1 },
+          { time: '15:00', icon: cond.icon, tempC: baseTemp },
+          { time: '18:00', icon: 'cloud', tempC: baseTemp - 2 },
+          { time: '21:00', icon: 'nights_stay', tempC: baseTemp - 4 }
+        ],
+        days: [
+          { day: 'Heute', icon: cond.icon, highC: baseTemp, lowC: baseTemp - 5 },
+          { day: 'Morgen', icon: 'partly_cloudy_day', highC: baseTemp + 1, lowC: baseTemp - 4 },
+          { day: 'Übermorgen', icon: 'rainy', highC: baseTemp - 1, lowC: baseTemp - 5 },
+          { day: 'Tag 4', icon: 'wb_sunny', highC: baseTemp + 2, lowC: baseTemp - 3 }
+        ]
+      };
+    }
+
+    function ensureCityData(name) {
+      if (!CITY_PRESETS[name]) {
+        CITY_PRESETS[name] = buildSyntheticCity(name);
+      }
+      return CITY_PRESETS[name];
+    }
+
+    function selectCity(name) {
+      currentCity = name;
+      ensureCityData(name);
+      renderWeather();
+    }
+
+    function searchOrAddCity() {
+      const input = document.getElementById('city-search-input');
+      const raw = (input.value || '').trim();
+      if (!raw) return;
+      const formatted = raw.charAt(0).toUpperCase() + raw.slice(1);
+      selectCity(formatted);
+      input.value = '';
+    }
+
+    function toggleUnit() {
+      useFahrenheit = !useFahrenheit;
+      document.getElementById('unit-toggle-btn').textContent = useFahrenheit ? '°F' : '°C';
+      renderWeather();
+    }
+
+    function renderWeather() {
+      const data = ensureCityData(currentCity);
+      const chipsEl = document.getElementById('city-chips');
+
+      chipsEl.innerHTML = Object.keys(CITY_PRESETS).map(cityName => {
+        const active = cityName === currentCity ? 'active' : '';
+        return `<button type="button" class="m3-chip ${active}" onclick="selectCity('${cityName.replace(/'/g, "\\'")}')">${cityName}</button>`;
+      }).join('');
+
+      document.getElementById('w-city').textContent = currentCity;
+      document.getElementById('w-main-icon').textContent = data.icon;
+      document.getElementById('w-temp').textContent = formatTemp(data.tempC);
+      document.getElementById('w-desc').textContent = data.desc;
+      document.getElementById('w-detail').textContent = data.detail;
+
+      document.getElementById('hourly-strip').innerHTML = data.hourly.map(h => `
+        <div class="hour-card">
+          <div style="font-size:12px;font-weight:700;color:var(--md-sys-color-on-surface-variant);">${h.time}</div>
+          <span class="material-symbols-rounded filled" style="font-size:24px;color:var(--md-sys-color-primary);margin:6px 0;">${h.icon}</span>
+          <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;">${formatShortTemp(h.tempC)}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('forecast-grid').innerHTML = data.days.map(d => `
+        <div class="m3-card" style="text-align:center;">
+          <div style="font-weight:700;margin-bottom:8px;">${d.day}</div>
+          <span class="material-symbols-rounded filled" style="font-size:32px;color:var(--md-sys-color-primary);">${d.icon}</span>
+          <div style="font-family:var(--font-mono);font-size:19px;font-weight:700;margin-top:8px;">${formatShortTemp(d.highC)} / ${formatShortTemp(d.lowC)}</div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('city-search-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchOrAddCity();
+      }
+    });
+
+    renderWeather();
   </script>
 </body>
 </html>
