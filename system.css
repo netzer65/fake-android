@@ -1263,3 +1263,116 @@ html.ee-spin body {
   background: #38BDF8;
   color: #061826;
 }
+
+/* === Gboard-like Optional On-Screen Keyboard (OSK) === */
+.android-shell.osk-open .app-main {
+  padding-bottom: 292px;
+}
+
+.gboard-osk {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 110;
+  background: var(--md-sys-color-surface-container, #EAECEF);
+  color: var(--md-sys-color-on-surface, #1A1C1E);
+  border-top: 1px solid var(--md-sys-color-outline-variant, #ECEEF2);
+  padding: 8px 8px 14px;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.16);
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), opacity 0.18s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.gboard-osk.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gboard-topstrip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px 8px;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant, #5B5F66);
+}
+
+.gboard-target-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--md-sys-color-secondary-container, #D7E3F7);
+  color: var(--md-sys-color-on-secondary-container, #101C2B);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.gboard-row:last-child {
+  margin-bottom: 0;
+}
+
+.gboard-key {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-highest, #E4E6EC);
+  color: var(--md-sys-color-on-surface, #1A1C1E);
+  font-family: var(--font-sans, inherit);
+  font-size: 17px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  transition: transform 0.06s ease, background 0.12s ease;
+}
+
+.gboard-key:active {
+  transform: scale(0.95);
+  background: var(--md-sys-color-primary-container, #D1E4FF);
+}
+
+.gboard-key.fn {
+  flex: 1.45 1 0;
+  background: var(--md-sys-color-secondary-container, #D7E3F7);
+  color: var(--md-sys-color-on-secondary-container, #101C2B);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gboard-key.fn.active {
+  background: var(--md-sys-color-primary, #0061A4);
+  color: var(--md-sys-color-on-primary, #FFFFFF);
+}
+
+.gboard-key.space {
+  flex: 4.2 1 0;
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface-variant, #5B5F66);
+}
+
+.gboard-key.enter {
+  flex: 1.6 1 0;
+  background: var(--md-sys-color-primary, #0061A4);
+  color: var(--md-sys-color-on-primary, #FFFFFF);
+}
