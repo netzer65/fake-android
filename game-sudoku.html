@@ -6,15 +6,31 @@
   <title>Sudoku – Android</title>
   <link rel="stylesheet" href="system.css">
   <style>
+    .sudoku-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .sudoku-toolbar {
+      width: 100%;
+      max-width: 386px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
     .sudoku-grid {
-      max-width: 378px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 386px;
       display: grid;
       grid-template-columns: repeat(9, 1fr);
-      gap: 4px;
-      padding: 10px;
-      border-radius: 20px;
+      gap: 3px;
+      padding: 8px;
+      border-radius: 22px;
       background: var(--md-sys-color-surface-container-highest);
+      border: 1px solid var(--md-sys-color-outline-variant);
     }
     .s-cell {
       aspect-ratio: 1;
@@ -26,13 +42,66 @@
       cursor: pointer;
       background: var(--md-sys-color-surface);
       color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      transition: background 0.12s ease, transform 0.08s ease;
+    }
+    .s-cell:active {
+      transform: scale(0.95);
+    }
+    /* Dezent hervorgehobene 3x3-Ränder */
+    .s-cell.b-right {
+      margin-right: 3px;
+    }
+    .s-cell.b-bottom {
+      margin-bottom: 3px;
+    }
+    .s-cell.peer {
+      background: var(--md-sys-color-surface-container);
+    }
+    .s-cell.same-num {
+      background: var(--md-sys-color-tertiary-container);
+      color: var(--md-sys-color-on-tertiary-container);
     }
     .s-cell.fixed {
       background: var(--md-sys-color-secondary-container);
       color: var(--md-sys-color-on-secondary-container);
     }
+    .s-cell.conflict {
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+    }
     .s-cell.sel {
-      outline: 2px solid var(--md-sys-color-primary);
+      outline: 2.5px solid var(--md-sys-color-primary);
+      z-index: 2;
+    }
+    .notes-grid {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      align-items: center;
+      justify-items: center;
+      font-size: 8.5px;
+      line-height: 1;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    .numpad {
+      max-width: 386px;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .numpad .m3-chip {
+      min-width: 38px;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
     }
   </style>
 </head>
@@ -51,22 +120,38 @@
           <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="sudoku-status">Zelle wählen & Zahl tippen</div>
         </div>
       </div>
-      <button class="m3-btn m3-btn-tonal" onclick="resetSudoku()">Neu</button>
+      <div style="display:flex;gap:6px;">
+        <button class="icon-btn" onclick="restartCurrentPuzzle()" title="Aktuelles Rätsel neu starten">
+          <span class="material-symbols-rounded">restart_alt</span>
+        </button>
+        <button class="m3-btn m3-btn-tonal" onclick="nextPuzzle()">Neu</button>
+      </div>
     </header>
 
     <main class="app-main">
-      <div class="sudoku-grid" id="sudoku-board"></div>
-      <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:16px;">
-        <button class="m3-chip" onclick="setNum(1)">1</button>
-        <button class="m3-chip" onclick="setNum(2)">2</button>
-        <button class="m3-chip" onclick="setNum(3)">3</button>
-        <button class="m3-chip" onclick="setNum(4)">4</button>
-        <button class="m3-chip" onclick="setNum(5)">5</button>
-        <button class="m3-chip" onclick="setNum(6)">6</button>
-        <button class="m3-chip" onclick="setNum(7)">7</button>
-        <button class="m3-chip" onclick="setNum(8)">8</button>
-        <button class="m3-chip" onclick="setNum(9)">9</button>
-        <button class="m3-chip" onclick="setNum(0)">✕</button>
+      <div class="sudoku-wrap">
+        <div class="sudoku-toolbar">
+          <button class="m3-chip" id="notes-toggle-btn" onclick="toggleNotesMode()">
+            <span class="material-symbols-rounded" style="font-size:17px;">edit</span>
+            <span>Notizen: Aus</span>
+          </button>
+          <span style="font-size:12px;font-weight:600;color:var(--md-sys-color-on-surface-variant);" id="sudoku-meta">Rätsel #1 · 0/81</span>
+        </div>
+
+        <div class="sudoku-grid" id="sudoku-board" role="grid" aria-label="Sudoku Spielfeld"></div>
+
+        <div class="numpad" id="sudoku-numpad">
+          <button class="m3-chip" onclick="setNum(1)">1</button>
+          <button class="m3-chip" onclick="setNum(2)">2</button>
+          <button class="m3-chip" onclick="setNum(3)">3</button>
+          <button class="m3-chip" onclick="setNum(4)">4</button>
+          <button class="m3-chip" onclick="setNum(5)">5</button>
+          <button class="m3-chip" onclick="setNum(6)">6</button>
+          <button class="m3-chip" onclick="setNum(7)">7</button>
+          <button class="m3-chip" onclick="setNum(8)">8</button>
+          <button class="m3-chip" onclick="setNum(9)">9</button>
+          <button class="m3-chip" onclick="setNum(0)" title="Löschen">✕</button>
+        </div>
       </div>
     </main>
 
@@ -77,40 +162,192 @@
   <script>AndroidOS.requireUnlocked(true);</script>
   <script>
     AndroidOS.mountShell();
-    const PUZZLE = [
-      5,3,0,0,7,0,0,0,0,
-      6,0,0,1,9,5,0,0,0,
-      0,9,8,0,0,0,0,6,0,
-      8,0,0,0,6,0,0,0,3,
-      4,0,0,8,0,3,0,0,1,
-      7,0,0,0,2,0,0,0,6,
-      0,6,0,0,0,0,2,8,0,
-      0,0,0,4,1,9,0,0,5,
-      0,0,0,0,8,0,0,7,9
+
+    const PUZZLES = [
+      [
+        5,3,0,0,7,0,0,0,0,
+        6,0,0,1,9,5,0,0,0,
+        0,9,8,0,0,0,0,6,0,
+        8,0,0,0,6,0,0,0,3,
+        4,0,0,8,0,3,0,0,1,
+        7,0,0,0,2,0,0,0,6,
+        0,6,0,0,0,0,2,8,0,
+        0,0,0,4,1,9,0,0,5,
+        0,0,0,0,8,0,0,7,9
+      ],
+      [
+        0,0,0,2,6,0,7,0,1,
+        6,8,0,0,7,0,0,9,0,
+        1,9,0,0,0,4,5,0,0,
+        8,2,0,1,0,0,0,4,0,
+        0,0,4,6,0,2,9,0,0,
+        0,5,0,0,0,3,0,2,8,
+        0,0,9,3,0,0,0,7,4,
+        0,4,0,0,5,0,0,3,6,
+        7,0,3,0,1,8,0,0,0
+      ],
+      [
+        1,0,0,4,8,9,0,0,6,
+        7,3,0,0,0,0,0,4,0,
+        0,0,0,0,0,1,2,9,5,
+        0,0,7,1,2,0,6,0,0,
+        5,0,0,7,0,3,0,0,8,
+        0,0,6,0,9,5,7,0,0,
+        9,1,4,6,0,0,0,0,0,
+        0,2,0,0,0,0,0,3,7,
+        8,0,0,5,1,2,0,0,4
+      ]
     ];
-    let board = [...PUZZLE];
+
+    let puzzleIndex = 0;
+    let currentPuzzle = [...PUZZLES[0]];
+    let board = [...PUZZLES[0]];
+    let notes = Array.from({ length: 81 }, () => new Set());
+    let notesMode = false;
     let selected = 2;
 
-    function resetSudoku() {
-      board = [...PUZZLE];
+    function loadPuzzle(idx) {
+      puzzleIndex = ((idx % PUZZLES.length) + PUZZLES.length) % PUZZLES.length;
+      currentPuzzle = [...PUZZLES[puzzleIndex]];
+      board = [...currentPuzzle];
+      notes = Array.from({ length: 81 }, () => new Set());
+      selected = currentPuzzle.findIndex(v => v === 0);
+      if (selected < 0) selected = 0;
       document.getElementById('sudoku-status').textContent = 'Zelle wählen & Zahl tippen';
       renderSudoku();
     }
 
+    function restartCurrentPuzzle() {
+      loadPuzzle(puzzleIndex);
+      AndroidOS.showToast('Rätsel zurückgesetzt');
+    }
+
+    function nextPuzzle() {
+      loadPuzzle(puzzleIndex + 1);
+      AndroidOS.showToast(`Neues Sudoku #${puzzleIndex + 1} geladen`);
+    }
+
+    function toggleNotesMode() {
+      notesMode = !notesMode;
+      const btn = document.getElementById('notes-toggle-btn');
+      btn.classList.toggle('active', notesMode);
+      btn.querySelector('span:last-child').textContent = notesMode ? 'Notizen: An' : 'Notizen: Aus';
+    }
+
+    function isSamePeer(a, b) {
+      if (a === b) return false;
+      const ra = Math.floor(a / 9), ca = a % 9;
+      const rb = Math.floor(b / 9), cb = b % 9;
+      const ba = Math.floor(ra / 3) * 3 + Math.floor(ca / 3);
+      const bb = Math.floor(rb / 3) * 3 + Math.floor(cb / 3);
+      return ra === rb || ca === cb || ba === bb;
+    }
+
+    function getConflictIndices() {
+      const conflicts = new Set();
+      for (let i = 0; i < 81; i++) {
+        const val = board[i];
+        if (!val) continue;
+        for (let j = i + 1; j < 81; j++) {
+          if (board[j] === val && isSamePeer(i, j)) {
+            conflicts.add(i);
+            conflicts.add(j);
+          }
+        }
+      }
+      return conflicts;
+    }
+
+    function checkSolved(conflicts) {
+      if (conflicts.size > 0) return false;
+      return board.every(v => v >= 1 && v <= 9);
+    }
+
     function setNum(n) {
-      if (PUZZLE[selected] !== 0) return;
-      board[selected] = n;
+      if (currentPuzzle[selected] !== 0) return;
+
+      if (n === 0) {
+        board[selected] = 0;
+        notes[selected].clear();
+        renderSudoku();
+        return;
+      }
+
+      if (notesMode) {
+        board[selected] = 0;
+        if (notes[selected].has(n)) notes[selected].delete(n);
+        else notes[selected].add(n);
+        renderSudoku();
+        return;
+      }
+
+      notes[selected].clear();
+      board[selected] = board[selected] === n ? 0 : n;
       renderSudoku();
     }
 
     function renderSudoku() {
       const el = document.getElementById('sudoku-board');
+      const conflicts = getConflictIndices();
+      const selectedVal = board[selected];
+
       el.innerHTML = board.map((v, idx) => {
-        const fixed = PUZZLE[idx] !== 0;
+        const fixed = currentPuzzle[idx] !== 0;
         const sel = idx === selected;
-        return `<button class="s-cell ${fixed ? 'fixed' : ''} ${sel ? 'sel' : ''}" onclick="selected=${idx};renderSudoku();">${v || ''}</button>`;
+        const peer = !sel && isSamePeer(idx, selected);
+        const sameNum = !sel && selectedVal > 0 && v === selectedVal;
+        const conflict = conflicts.has(idx);
+        const col = idx % 9;
+        const row = Math.floor(idx / 9);
+        const bRight = (col === 2 || col === 5) ? 'b-right' : '';
+        const bBottom = (row === 2 || row === 5) ? 'b-bottom' : '';
+
+        let inner = '';
+        if (v) {
+          inner = String(v);
+        } else if (notes[idx] && notes[idx].size > 0) {
+          const cells = Array.from({ length: 9 }, (_, k) => {
+            const num = k + 1;
+            return `<span>${notes[idx].has(num) ? num : ''}</span>`;
+          }).join('');
+          inner = `<div class="notes-grid">${cells}</div>`;
+        }
+
+        return `<button class="s-cell ${bRight} ${bBottom} ${fixed ? 'fixed' : ''} ${peer ? 'peer' : ''} ${sameNum ? 'same-num' : ''} ${conflict ? 'conflict' : ''} ${sel ? 'sel' : ''}" onclick="selected=${idx};renderSudoku();">${inner}</button>`;
       }).join('');
+
+      const filledCount = board.filter(v => v > 0).length;
+      document.getElementById('sudoku-meta').textContent = `Rätsel #${puzzleIndex + 1} · ${filledCount}/81`;
+
+      const statusEl = document.getElementById('sudoku-status');
+      if (checkSolved(conflicts)) {
+        statusEl.textContent = 'Geschafft! Sudoku fehlerfrei gelöst.';
+      } else if (conflicts.size > 0) {
+        statusEl.textContent = 'Konflikt erkannt – doppelte Zahl in Reihe, Spalte oder Block';
+      } else {
+        statusEl.textContent = notesMode ? 'Notizen-Modus aktiv' : 'Zelle wählen & Zahl tippen';
+      }
     }
+
+    document.addEventListener('keydown', e => {
+      if (e.key >= '1' && e.key <= '9') {
+        setNum(Number(e.key));
+      } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+        setNum(0);
+      } else if (e.key === 'ArrowRight') {
+        selected = (selected + 1) % 81;
+        renderSudoku();
+      } else if (e.key === 'ArrowLeft') {
+        selected = (selected + 80) % 81;
+        renderSudoku();
+      } else if (e.key === 'ArrowDown') {
+        selected = (selected + 9) % 81;
+        renderSudoku();
+      } else if (e.key === 'ArrowUp') {
+        selected = (selected + 72) % 81;
+        renderSudoku();
+      }
+    });
 
     renderSudoku();
   </script>
