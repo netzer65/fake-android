@@ -66,6 +66,12 @@
       gap: 8px;
       margin-top: 3px;
     }
+    .store-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
     .install-pill {
       padding: 8px 16px;
       border-radius: 999px;
@@ -83,6 +89,23 @@
     .install-pill.available {
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
+    }
+    .uninstall-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .uninstall-btn:hover {
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+      border-color: transparent;
     }
   </style>
 </head>
@@ -146,11 +169,11 @@
     ];
 
     const PLAY_COPY = {
-      de: { search: 'Apps & Spiele suchen', all: 'Alle', tools: 'Tools', prod: 'Produktivität', media: 'Medien', games: 'Spiele', open: 'Öffnen', install: 'Installieren', installed: 'Installiert' },
-      en: { search: 'Search apps & games', all: 'All', tools: 'Tools', prod: 'Productivity', media: 'Media', games: 'Games', open: 'Open', install: 'Install', installed: 'Installed' },
-      fr: { search: 'Rechercher applis et jeux', all: 'Tout', tools: 'Outils', prod: 'Productivité', media: 'Médias', games: 'Jeux', open: 'Ouvrir', install: 'Installer', installed: 'Installé' },
-      es: { search: 'Buscar apps y juegos', all: 'Todo', tools: 'Herramientas', prod: 'Productividad', media: 'Multimedia', games: 'Juegos', open: 'Abrir', install: 'Instalar', installed: 'Instalado' },
-      ja: { search: 'アプリとゲームを検索', all: 'すべて', tools: 'ツール', prod: '仕事効率化', media: 'メディア', games: 'ゲーム', open: '開く', install: 'インストール', installed: 'インストール済み' }
+      de: { search: 'Apps & Spiele suchen', all: 'Alle', tools: 'Tools', prod: 'Produktivität', media: 'Medien', games: 'Spiele', open: 'Öffnen', install: 'Installieren', uninstall: 'Deinstallieren' },
+      en: { search: 'Search apps & games', all: 'All', tools: 'Tools', prod: 'Productivity', media: 'Media', games: 'Games', open: 'Open', install: 'Install', uninstall: 'Uninstall' },
+      fr: { search: 'Rechercher applis et jeux', all: 'Tout', tools: 'Outils', prod: 'Productivité', media: 'Médias', games: 'Jeux', open: 'Ouvrir', install: 'Installer', uninstall: 'Désinstaller' },
+      es: { search: 'Buscar apps y juegos', all: 'Todo', tools: 'Herramientas', prod: 'Productividad', media: 'Multimedia', games: 'Juegos', open: 'Abrir', install: 'Instalar', uninstall: 'Desinstalar' },
+      ja: { search: 'アプリとゲームを検索', all: 'すべて', tools: 'ツール', prod: '仕事効率化', media: 'メディア', games: 'ゲーム', open: '開く', install: 'インストール', uninstall: 'アンインストール' }
     };
 
     let currentCat = 'all';
@@ -169,15 +192,27 @@
       return list.includes(item.id);
     }
 
-    function toggleInstall(id) {
+    function installApp(id) {
       AndroidOS.updateState(s => {
         const list = Array.isArray(s.installedStoreApps) ? [...s.installedStoreApps] : [];
-        const idx = list.indexOf(id);
-        if (idx >= 0) list.splice(idx, 1);
-        else list.push(id);
+        if (!list.includes(id)) list.push(id);
         s.installedStoreApps = list;
       });
       renderStore();
+    }
+
+    function uninstallApp(id) {
+      AndroidOS.updateState(s => {
+        const list = Array.isArray(s.installedStoreApps) ? [...s.installedStoreApps] : [];
+        s.installedStoreApps = list.filter(itemId => itemId !== id);
+      });
+      renderStore();
+    }
+
+    function openApp(target) {
+      if (target) {
+        window.location.href = target;
+      }
     }
 
     function renderStore() {
@@ -206,11 +241,17 @@
       listEl.innerHTML = filtered.map(item => {
         const name = item.title[lang] || item.title.de;
         const installed = isInstalled(item, st);
-        const btnLabel = item.builtIn ? cp.open : (installed ? cp.installed : cp.install);
-        const btnClass = item.builtIn ? 'installed' : (installed ? 'installed' : 'available');
-        const action = item.builtIn
-          ? `window.location.href='${item.target}'`
-          : `toggleInstall('${item.id}')`;
+        const btnLabel = installed ? cp.open : cp.install;
+        const btnClass = installed ? 'installed' : 'available';
+        const action = installed
+          ? `openApp('${item.target}')`
+          : `installApp('${item.id}')`;
+
+        const uninstallBtn = (!item.builtIn && installed)
+          ? `<button class="uninstall-btn" onclick="uninstallApp('${item.id}')" title="${cp.uninstall}" aria-label="${cp.uninstall}">
+               <span class="material-symbols-rounded" style="font-size:18px;">delete</span>
+             </button>`
+          : '';
 
         return `
           <div class="app-store-card">
@@ -227,7 +268,10 @@
                 </div>
               </div>
             </div>
-            <button class="install-pill ${btnClass}" onclick="${action}">${btnLabel}</button>
+            <div class="store-actions">
+              <button class="install-pill ${btnClass}" onclick="${action}">${btnLabel}</button>
+              ${uninstallBtn}
+            </div>
           </div>
         `;
       }).join('');
