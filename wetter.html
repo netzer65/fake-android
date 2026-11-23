@@ -14,6 +14,30 @@
       margin-bottom: 12px;
       align-items: center;
     }
+    .city-chip-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .city-del-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      background: var(--md-sys-color-surface-container-low);
+      color: var(--md-sys-color-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+    .city-del-btn:hover {
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+      border-color: transparent;
+    }
     .weather-search {
       display: flex;
       gap: 8px;
@@ -66,10 +90,10 @@
       <div class="city-bar" id="city-chips"></div>
 
       <div class="weather-search">
-        <input type="text" id="city-search-input" class="m3-input" style="flex:1;min-width:180px;" placeholder="Ort suchen (z. B. Hamburg, Güntringen, Krakenku)...">
+        <input type="text" id="city-search-input" class="m3-input" style="flex:1;min-width:180px;" placeholder="Ort suchen & speichern (z. B. Hamburg, Güntringen)...">
         <button class="m3-btn m3-btn-tonal" onclick="searchOrAddCity()">
-          <span class="material-symbols-rounded" style="font-size:18px;">search</span>
-          <span>Anzeigen</span>
+          <span class="material-symbols-rounded" style="font-size:18px;">add_location_alt</span>
+          <span>Speichern</span>
         </button>
       </div>
 
@@ -108,7 +132,7 @@
   <script>
     AndroidOS.mountShell();
 
-    const CITY_PRESETS = {
+    const DEFAULT_CITIES = {
       'Nordhorn': {
         tempC: 11,
         icon: 'partly_cloudy_day',
@@ -168,23 +192,6 @@
       }
     };
 
-    let useFahrenheit = false;
-    let currentCity = 'Nordhorn';
-
-    function formatTemp(tempC) {
-      if (useFahrenheit) {
-        return `${Math.round((tempC * 9) / 5 + 32)} °F`;
-      }
-      return `${Math.round(tempC)} °C`;
-    }
-
-    function formatShortTemp(tempC) {
-      if (useFahrenheit) {
-        return `${Math.round((tempC * 9) / 5 + 32)}°`;
-      }
-      return `${Math.round(tempC)}°`;
-    }
-
     function buildSyntheticCity(name) {
       let hash = 0;
       for (let i = 0; i < name.length; i++) {
@@ -205,7 +212,7 @@
         tempC: baseTemp,
         icon: cond.icon,
         desc: cond.desc,
-        detail: `Luftfeuchtigkeit ${hum} % · Wind ${wind} km/h · Lokale Simulation`,
+        detail: `Luftfeuchtigkeit ${hum} % · Wind ${wind} km/h · Gespeicherter Ort`,
         hourly: [
           { time: '09:00', icon: 'cloud', tempC: baseTemp - 3 },
           { time: '12:00', icon: cond.icon, tempC: baseTemp - 1 },
@@ -222,16 +229,37 @@
       };
     }
 
-    function ensureCityData(name) {
-      if (!CITY_PRESETS[name]) {
-        CITY_PRESETS[name] = buildSyntheticCity(name);
+    function getWeatherPrefs() {
+      const st = AndroidOS.getState();
+      return {
+        customCities: (st && typeof st.weatherCustomCities === 'object' && st.weatherCustomCities) ? st.weatherCustomCities : {},
+        selectedCity: (st && st.weatherSelectedCity) || 'Nordhorn',
+        useFahrenheit: Boolean(st && st.weatherUseFahrenheit)
+      };
+    }
+
+    function getAllCitiesMap(prefs) {
+      return { ...DEFAULT_CITIES, ...prefs.customCities };
+    }
+
+    function formatTemp(tempC, useFahrenheit) {
+      if (useFahrenheit) {
+        return `${Math.round((tempC * 9) / 5 + 32)} °F`;
       }
-      return CITY_PRESETS[name];
+      return `${Math.round(tempC)} °C`;
+    }
+
+    function formatShortTemp(tempC, useFahrenheit) {
+      if (useFahrenheit) {
+        return `${Math.round((tempC * 9) / 5 + 32)}°`;
+      }
+      return `${Math.round(tempC)}°`;
     }
 
     function selectCity(name) {
-      currentCity = name;
-      ensureCityData(name);
+      AndroidOS.updateState(s => {
+        s.weatherSelectedCity = name;
+      });
       renderWeather();
     }
 
@@ -239,29 +267,79 @@
       const input = document.getElementById('city-search-input');
       const raw = (input.value || '').trim();
       if (!raw) return;
+
       const formatted = raw.charAt(0).toUpperCase() + raw.slice(1);
-      selectCity(formatted);
+      const prefs = getWeatherPrefs();
+      const allMap = getAllCitiesMap(prefs);
+
+      AndroidOS.updateState(s => {
+        s.weatherCustomCities = (s.weatherCustomCities && typeof s.weatherCustomCities === 'object')
+          ? { ...s.weatherCustomCities }
+          : {};
+        if (!allMap[formatted]) {
+          s.weatherCustomCities[formatted] = buildSyntheticCity(formatted);
+        }
+        s.weatherSelectedCity = formatted;
+      });
+
       input.value = '';
+      AndroidOS.showToast(`${formatted} gespeichert`);
+      renderWeather();
+    }
+
+    function deleteCustomCity(name, e) {
+      if (e) e.stopPropagation();
+      AndroidOS.updateState(s => {
+        if (!s.weatherCustomCities || !s.weatherCustomCities[name]) return;
+        const nextMap = { ...s.weatherCustomCities };
+        delete nextMap[name];
+        s.weatherCustomCities = nextMap;
+        if (s.weatherSelectedCity === name) {
+          s.weatherSelectedCity = 'Nordhorn';
+        }
+      });
+      AndroidOS.showToast(`${name} entfernt`);
+      renderWeather();
     }
 
     function toggleUnit() {
-      useFahrenheit = !useFahrenheit;
-      document.getElementById('unit-toggle-btn').textContent = useFahrenheit ? '°F' : '°C';
+      const prefs = getWeatherPrefs();
+      const nextF = !prefs.useFahrenheit;
+      AndroidOS.updateState(s => {
+        s.weatherUseFahrenheit = nextF;
+      });
       renderWeather();
     }
 
     function renderWeather() {
-      const data = ensureCityData(currentCity);
-      const chipsEl = document.getElementById('city-chips');
+      const prefs = getWeatherPrefs();
+      const allMap = getAllCitiesMap(prefs);
+      const activeName = allMap[prefs.selectedCity] ? prefs.selectedCity : 'Nordhorn';
+      const data = allMap[activeName] || DEFAULT_CITIES.Nordhorn;
+      const customNames = Object.keys(prefs.customCities);
 
-      chipsEl.innerHTML = Object.keys(CITY_PRESETS).map(cityName => {
-        const active = cityName === currentCity ? 'active' : '';
-        return `<button type="button" class="m3-chip ${active}" onclick="selectCity('${cityName.replace(/'/g, "\\'")}')">${cityName}</button>`;
+      document.getElementById('unit-toggle-btn').textContent = prefs.useFahrenheit ? '°F' : '°C';
+
+      const chipsEl = document.getElementById('city-chips');
+      chipsEl.innerHTML = Object.keys(allMap).map(cityName => {
+        const active = cityName === activeName ? 'active' : '';
+        const isCustom = customNames.includes(cityName);
+        const delBtn = isCustom
+          ? `<button type="button" class="city-del-btn" onclick="deleteCustomCity('${cityName.replace(/'/g, "\\'")}', event)" title="${cityName} entfernen" aria-label="${cityName} entfernen">
+               <span class="material-symbols-rounded" style="font-size:14px;">close</span>
+             </button>`
+          : '';
+        return `
+          <div class="city-chip-wrap">
+            <button type="button" class="m3-chip ${active}" onclick="selectCity('${cityName.replace(/'/g, "\\'")}')">${cityName}</button>
+            ${delBtn}
+          </div>
+        `;
       }).join('');
 
-      document.getElementById('w-city').textContent = currentCity;
+      document.getElementById('w-city').textContent = activeName;
       document.getElementById('w-main-icon').textContent = data.icon;
-      document.getElementById('w-temp').textContent = formatTemp(data.tempC);
+      document.getElementById('w-temp').textContent = formatTemp(data.tempC, prefs.useFahrenheit);
       document.getElementById('w-desc').textContent = data.desc;
       document.getElementById('w-detail').textContent = data.detail;
 
@@ -269,7 +347,7 @@
         <div class="hour-card">
           <div style="font-size:12px;font-weight:700;color:var(--md-sys-color-on-surface-variant);">${h.time}</div>
           <span class="material-symbols-rounded filled" style="font-size:24px;color:var(--md-sys-color-primary);margin:6px 0;">${h.icon}</span>
-          <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;">${formatShortTemp(h.tempC)}</div>
+          <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;">${formatShortTemp(h.tempC, prefs.useFahrenheit)}</div>
         </div>
       `).join('');
 
@@ -277,7 +355,7 @@
         <div class="m3-card" style="text-align:center;">
           <div style="font-weight:700;margin-bottom:8px;">${d.day}</div>
           <span class="material-symbols-rounded filled" style="font-size:32px;color:var(--md-sys-color-primary);">${d.icon}</span>
-          <div style="font-family:var(--font-mono);font-size:19px;font-weight:700;margin-top:8px;">${formatShortTemp(d.highC)} / ${formatShortTemp(d.lowC)}</div>
+          <div style="font-family:var(--font-mono);font-size:19px;font-weight:700;margin-top:8px;">${formatShortTemp(d.highC, prefs.useFahrenheit)} / ${formatShortTemp(d.lowC, prefs.useFahrenheit)}</div>
         </div>
       `).join('');
     }
