@@ -752,10 +752,14 @@ const AndroidOS = (() => {
   let oskEl = null;
   let popoverEl = null;
   let oskListenersAttached = false;
-  let lastOskKeyClickAt = 0;
+  let lastOskInteractionAt = 0;
   let longPressTimer = null;
   let longPressTriggered = false;
   let longPressSourceKey = null;
+
+  function markOskInteraction() {
+    lastOskInteractionAt = Date.now();
+  }
 
   function isOskEnabled(state = getState()) {
     return Boolean(state && state.oskEnabled);
@@ -826,6 +830,9 @@ const AndroidOS = (() => {
 
   function insertTextAtCursor(el, text) {
     if (!el || !text) return;
+    if (document.activeElement !== el && typeof el.focus === 'function') {
+      try { el.focus({ preventScroll: true }); } catch (_) {}
+    }
     if (el.isContentEditable) {
       document.execCommand('insertText', false, text);
       dispatchInputEvents(el);
@@ -899,13 +906,21 @@ const AndroidOS = (() => {
     popoverEl.setAttribute('role', 'listbox');
     popoverEl.setAttribute('aria-label', 'Zeichenvarianten');
 
-    popoverEl.addEventListener('mousedown', e => e.preventDefault());
-    popoverEl.addEventListener('pointerdown', e => e.preventDefault());
+    popoverEl.addEventListener('mousedown', e => {
+      e.preventDefault();
+      markOskInteraction();
+    });
+    popoverEl.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      markOskInteraction();
+    });
 
-    popoverEl.addEventListener('click', e => {
-      const opt = e.target.closest('.gboard-lp-item');
+    const handleVariantPick = e => {
+      const opt = e.target && e.target.closest ? e.target.closest('.gboard-lp-item') : null;
       if (!opt || !activeInput) return;
-      lastOskKeyClickAt = Date.now();
+      e.preventDefault();
+      e.stopPropagation();
+      markOskInteraction();
       const ch = decodeURIComponent(opt.dataset.char || '');
       insertTextAtCursor(activeInput, ch);
       if (!symMode && shiftActive) {
@@ -913,7 +928,11 @@ const AndroidOS = (() => {
         renderKeys();
       }
       hideLongPressPopover();
-    });
+      longPressTriggered = false;
+    };
+
+    popoverEl.addEventListener('pointerup', handleVariantPick);
+    popoverEl.addEventListener('click', handleVariantPick);
 
     document.body.appendChild(popoverEl);
     return popoverEl;
@@ -956,6 +975,7 @@ const AndroidOS = (() => {
     pop.style.left = `${left}px`;
     pop.style.top = `${top}px`;
     longPressTriggered = true;
+    markOskInteraction();
     return true;
   }
 
@@ -1026,9 +1046,14 @@ const AndroidOS = (() => {
       <div id="gboard-keys"></div>
     `;
 
-    oskEl.addEventListener('mousedown', e => e.preventDefault());
+    oskEl.addEventListener('mousedown', e => {
+      e.preventDefault();
+      markOskInteraction();
+    });
+
     oskEl.addEventListener('pointerdown', e => {
       e.preventDefault();
+      markOskInteraction();
       const keyBtn = e.target.closest('.gboard-key');
       if (!keyBtn || !activeInput || keyBtn.dataset.char === undefined) return;
       const baseChar = decodeURIComponent(keyBtn.dataset.baseChar || keyBtn.dataset.char || '');
@@ -1055,9 +1080,9 @@ const AndroidOS = (() => {
     oskEl.addEventListener('pointerleave', cancelPendingLongPress);
 
     oskEl.addEventListener('click', e => {
+      markOskInteraction();
       const layoutBtn = e.target.closest('#gboard-layout-btn');
       if (layoutBtn) {
-        lastOskKeyClickAt = Date.now();
         cycleOskLayout();
         return;
       }
@@ -1069,7 +1094,6 @@ const AndroidOS = (() => {
       const keyBtn = e.target.closest('.gboard-key');
       if (!keyBtn || !activeInput) return;
 
-      lastOskKeyClickAt = Date.now();
       cancelPendingLongPress();
 
       if (longPressTriggered) {
@@ -1213,7 +1237,7 @@ const AndroidOS = (() => {
 
     document.addEventListener('click', e => {
       if (!oskEl || !oskEl.classList.contains('open')) return;
-      if (Date.now() - lastOskKeyClickAt < 80) return;
+      if (Date.now() - lastOskInteractionAt < 180) return;
       const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
       if (
         path.includes(oskEl) ||
