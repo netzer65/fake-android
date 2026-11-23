@@ -1265,8 +1265,13 @@ html.ee-spin body {
 }
 
 /* === Gboard-like Optional On-Screen Keyboard (OSK) === */
-.android-shell.osk-open .app-main {
-  padding-bottom: 292px;
+:root {
+  --osk-height: 250px;
+}
+
+.android-shell.osk-open .app-main,
+.android-shell.osk-open .overlay-body {
+  padding-bottom: calc(var(--osk-height, 250px) + 32px);
 }
 
 .gboard-osk {
@@ -1275,12 +1280,16 @@ html.ee-spin body {
   right: 0;
   bottom: 0;
   z-index: 110;
+  max-width: 100vw;
+  max-height: 55dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--md-sys-color-surface-container, #EAECEF);
   color: var(--md-sys-color-on-surface, #1A1C1E);
   border-top: 1px solid var(--md-sys-color-outline-variant, #ECEEF2);
-  padding: 8px 8px 14px;
+  padding: 8px 8px calc(12px + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.16);
-  transform: translateY(100%);
+  transform: translate3d(0, 100%, 0);
   opacity: 0;
   pointer-events: none;
   transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), opacity 0.18s ease;
@@ -1289,7 +1298,7 @@ html.ee-spin body {
 }
 
 .gboard-osk.open {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
   opacity: 1;
   pointer-events: auto;
 }
@@ -1320,7 +1329,7 @@ html.ee-spin body {
 .gboard-row {
   display: flex;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   margin-bottom: 6px;
 }
 
@@ -1331,13 +1340,13 @@ html.ee-spin body {
 .gboard-key {
   flex: 1 1 0;
   min-width: 0;
-  height: 44px;
+  height: clamp(36px, 6.2dvh, 44px);
   border: none;
   border-radius: 12px;
   background: var(--md-sys-color-surface-container-highest, #E4E6EC);
   color: var(--md-sys-color-on-surface, #1A1C1E);
   font-family: var(--font-sans, inherit);
-  font-size: 17px;
+  font-size: clamp(14px, 4vw, 17px);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
