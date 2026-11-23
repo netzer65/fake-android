@@ -669,13 +669,27 @@ const AndroidOS = (() => {
     dotEl.style.background = '#34D399';
   }
 
-/* === Gboard-like Optional On-Screen Keyboard Controller === */
-  const ROWS_LETTERS = [
-    ['q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'ü'],
-    ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ö', 'ä'],
-    ['SHIFT', 'y', 'x', 'c', 'v', 'b', 'n', 'm', 'ß', 'BACKSPACE'],
-    ['?123', ',', 'SPACE', '.', 'ENTER']
-  ];
+/* === Gboard-like Optional On-Screen Keyboard Controller (QWERTZ/QWERTY/AZERTY + Long-Press) === */
+  const LAYOUTS = {
+    qwertz: [
+      ['q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'ü'],
+      ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ö', 'ä'],
+      ['SHIFT', 'y', 'x', 'c', 'v', 'b', 'n', 'm', 'ß', 'BACKSPACE'],
+      ['?123', ',', 'SPACE', '.', 'ENTER']
+    ],
+    qwerty: [
+      ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+      ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+      ['SHIFT', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'BACKSPACE'],
+      ['?123', ',', 'SPACE', '.', 'ENTER']
+    ],
+    azerty: [
+      ['a', 'z', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+      ['q', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm'],
+      ['SHIFT', 'w', 'x', 'c', 'v', 'b', 'n', 'BACKSPACE'],
+      ['?123', ',', 'SPACE', '.', 'ENTER']
+    ]
+  };
 
   const ROWS_SYMBOLS = [
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'],
@@ -684,12 +698,64 @@ const AndroidOS = (() => {
     ['ABC', ',', 'SPACE', '.', 'ENTER']
   ];
 
+  // Umfassende Langtipp-Varianten inkl. Windows-1252 & ISO-8859-15 (Latin-9)
+  const LONG_PRESS_MAP = {
+    a: ['á', 'à', 'ä', 'â', 'å', 'ã', 'ą', 'ā', 'æ'],
+    e: ['é', 'è', 'ë', 'ê', 'ē', 'ę', '€'],
+    i: ['í', 'ì', 'ï', 'î', 'ī', 'į'],
+    o: ['ó', 'ò', 'ö', 'ô', 'õ', 'ō', 'ø', 'œ'],
+    u: ['ú', 'ù', 'ü', 'û', 'ū', 'ů', 'ų'],
+    y: ['ý', 'ÿ', 'ŷ'],
+    c: ['ç', 'ć', 'č', '©'],
+    d: ['ð', 'ď'],
+    l: ['ł', 'ĺ', 'ľ'],
+    n: ['ñ', 'ń', 'ň'],
+    r: ['ŕ', 'ř', '®'],
+    s: ['ß', 'š', 'ś', '$', '§'],
+    t: ['þ', 'ť', '™'],
+    z: ['ž', 'ź', 'ż'],
+    w: ['ŵ'],
+    '0': ['°', '∅', '₀', '⁰'],
+    '1': ['¹', '₁', '½'],
+    '2': ['²', '₂', '⅓'],
+    '3': ['³', '₃', '¼'],
+    '4': ['¾'],
+    '5': ['‰'],
+    '.': ['…', '·', '•', '†', '‡'],
+    ',': ['‚', '„', '«', '»'],
+    '?': ['¿', '‽'],
+    '!': ['¡', '‼'],
+    '-': ['–', '—', '±', '−'],
+    '/': ['\\', '÷', '⁄'],
+    '@': ['©', '®', '™'],
+    '€': ['$', '£', '¥', '¢', '¤', '‰'],
+    '$': ['€', '£', '¥', '¢', '¤'],
+    '&': ['§', '¶', '†', '‡'],
+    '*': ['•', '°', '×', '‰'],
+    '(': ['[', '{', '⟨', '«'],
+    ')': [']', '}', '⟩', '»'],
+    '=': ['≠', '≈', '≡', '±'],
+    '+': ['±', '×', '÷', '−'],
+    '_': ['–', '—', '―', '…'],
+    '~': ['≈', '¬', '°'],
+    '[': ['{', '«', '„', '‹'],
+    "'": ['’', '‘', '‚', '´', '`'],
+    '"': ['”', '“', '„', '«', '»'],
+    ':': [';', '…'],
+    ';': [':', '…'],
+    '%': ['‰', '°']
+  };
+
   let activeInput = null;
   let shiftActive = false;
   let symMode = false;
   let oskEl = null;
+  let popoverEl = null;
   let oskListenersAttached = false;
   let lastOskKeyClickAt = 0;
+  let longPressTimer = null;
+  let longPressTriggered = false;
+  let longPressSourceKey = null;
 
   function isOskEnabled(state = getState()) {
     return Boolean(state && state.oskEnabled);
@@ -707,9 +773,26 @@ const AndroidOS = (() => {
     return next.oskEnabled;
   }
 
+  function getOskLayout(state = getState()) {
+    const lay = String(state.oskLayout || 'qwertz').toLowerCase();
+    return LAYOUTS[lay] ? lay : 'qwertz';
+  }
+
+  function cycleOskLayout() {
+    const order = ['qwertz', 'qwerty', 'azerty'];
+    const cur = getOskLayout();
+    const nextLayout = order[(order.indexOf(cur) + 1) % order.length];
+    updateState(s => {
+      s.oskLayout = nextLayout;
+    });
+    hideLongPressPopover();
+    renderKeys();
+    showToast(`Tastaturlayout: ${nextLayout.toUpperCase()}`);
+  }
+
   function isTextInput(el) {
     if (!el || el.disabled || el.readOnly) return false;
-    if (el.closest && el.closest('#gboard-osk')) return false;
+    if (el.closest && (el.closest('#gboard-osk') || el.closest('#gboard-longpress'))) return false;
     if (el.tagName === 'TEXTAREA') return true;
     if (el.tagName === 'INPUT') {
       const tType = (el.type || 'text').toLowerCase();
@@ -742,6 +825,7 @@ const AndroidOS = (() => {
   }
 
   function insertTextAtCursor(el, text) {
+    if (!el || !text) return;
     if (el.isContentEditable) {
       document.execCommand('insertText', false, text);
       dispatchInputEvents(el);
@@ -759,6 +843,7 @@ const AndroidOS = (() => {
   }
 
   function backspaceAtCursor(el) {
+    if (!el) return;
     if (el.isContentEditable) {
       document.execCommand('delete', false, null);
       dispatchInputEvents(el);
@@ -779,6 +864,7 @@ const AndroidOS = (() => {
   }
 
   function pressEnter(el) {
+    if (!el) return;
     if (el.tagName === 'TEXTAREA' || el.isContentEditable) {
       insertTextAtCursor(el, '\n');
       return;
@@ -791,17 +877,105 @@ const AndroidOS = (() => {
     closeOsk();
   }
 
+  function applyCaseToVariant(ch, isUpper) {
+    if (!ch) return ch;
+    return isUpper ? ch.toUpperCase() : ch.toLowerCase();
+  }
+
+  function getVariantsForBaseChar(baseChar) {
+    if (!baseChar) return [];
+    const lookupKey = baseChar.toLowerCase();
+    const rawList = LONG_PRESS_MAP[lookupKey] || LONG_PRESS_MAP[baseChar] || [];
+    const isUpper = !symMode && shiftActive && baseChar.toLowerCase() !== baseChar.toUpperCase();
+    const formatted = rawList.map(v => applyCaseToVariant(v, isUpper));
+    return Array.from(new Set(formatted));
+  }
+
+  function ensureLongPressPopover() {
+    if (popoverEl && document.body.contains(popoverEl)) return popoverEl;
+    popoverEl = document.createElement('div');
+    popoverEl.id = 'gboard-longpress';
+    popoverEl.className = 'gboard-longpress';
+    popoverEl.setAttribute('role', 'listbox');
+    popoverEl.setAttribute('aria-label', 'Zeichenvarianten');
+
+    popoverEl.addEventListener('mousedown', e => e.preventDefault());
+    popoverEl.addEventListener('pointerdown', e => e.preventDefault());
+
+    popoverEl.addEventListener('click', e => {
+      const opt = e.target.closest('.gboard-lp-item');
+      if (!opt || !activeInput) return;
+      lastOskKeyClickAt = Date.now();
+      const ch = decodeURIComponent(opt.dataset.char || '');
+      insertTextAtCursor(activeInput, ch);
+      if (!symMode && shiftActive) {
+        shiftActive = false;
+        renderKeys();
+      }
+      hideLongPressPopover();
+    });
+
+    document.body.appendChild(popoverEl);
+    return popoverEl;
+  }
+
+  function hideLongPressPopover() {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+    longPressSourceKey = null;
+    if (popoverEl) {
+      popoverEl.classList.remove('open');
+      popoverEl.innerHTML = '';
+    }
+  }
+
+  function showLongPressPopover(keyBtn, baseChar) {
+    const variants = getVariantsForBaseChar(baseChar);
+    if (!variants.length || !keyBtn) return false;
+
+    const pop = ensureLongPressPopover();
+    pop.innerHTML = variants.map(v =>
+      `<button type="button" class="gboard-lp-item" data-char="${encodeURIComponent(v)}">${v}</button>`
+    ).join('');
+
+    pop.classList.add('open');
+
+    const rect = keyBtn.getBoundingClientRect();
+    const vv = window.visualViewport;
+    const minLeft = (vv ? vv.offsetLeft : 0) + 8;
+    const maxRight = (vv ? vv.offsetLeft + vv.width : window.innerWidth) - 8;
+
+    pop.style.left = '0px';
+    pop.style.top = '0px';
+    const popRect = pop.getBoundingClientRect();
+
+    let left = rect.left + rect.width / 2 - popRect.width / 2;
+    left = Math.max(minLeft, Math.min(left, maxRight - popRect.width));
+    const top = Math.max(8, rect.top - popRect.height - 8);
+
+    pop.style.left = `${left}px`;
+    pop.style.top = `${top}px`;
+    longPressTriggered = true;
+    return true;
+  }
+
   function renderKeys() {
     if (!oskEl) return;
     const keysWrap = oskEl.querySelector('#gboard-keys');
     const targetBadge = oskEl.querySelector('#gboard-target-name');
+    const layoutBtn = oskEl.querySelector('#gboard-layout-btn');
+    const layoutName = getOskLayout();
+
+    if (layoutBtn) {
+      layoutBtn.textContent = layoutName.toUpperCase();
+    }
     if (targetBadge && activeInput) {
       const label = activeInput.placeholder || activeInput.ariaLabel || activeInput.id || activeInput.tagName.toLowerCase();
       targetBadge.textContent = label;
     }
 
-    const layout = symMode ? ROWS_SYMBOLS : ROWS_LETTERS;
-    keysWrap.innerHTML = layout.map(row => {
+    const baseRows = symMode ? ROWS_SYMBOLS : (LAYOUTS[layoutName] || LAYOUTS.qwertz);
+    keysWrap.innerHTML = baseRows.map(row => {
       const rowHtml = row.map(key => {
         if (key === 'SHIFT') {
           return `<button type="button" class="gboard-key fn ${shiftActive ? 'active' : ''}" data-key="SHIFT" title="Groß/Klein"><span class="material-symbols-rounded" style="font-size:18px;">shift</span></button>`;
@@ -822,7 +996,8 @@ const AndroidOS = (() => {
           return `<button type="button" class="gboard-key enter" data-key="ENTER" title="Eingabe"><span class="material-symbols-rounded" style="font-size:19px;">keyboard_return</span></button>`;
         }
         const shown = !symMode && shiftActive ? key.toUpperCase() : key;
-        return `<button type="button" class="gboard-key" data-char="${encodeURIComponent(shown)}">${shown}</button>`;
+        const hasLp = getVariantsForBaseChar(key).length > 0;
+        return `<button type="button" class="gboard-key ${hasLp ? 'has-lp' : ''}" data-base-char="${encodeURIComponent(key)}" data-char="${encodeURIComponent(shown)}">${shown}</button>`;
       }).join('');
       return `<div class="gboard-row">${rowHtml}</div>`;
     }).join('');
@@ -842,6 +1017,7 @@ const AndroidOS = (() => {
           <span class="material-symbols-rounded" style="font-size:17px;">keyboard</span>
           Gboard
         </span>
+        <button type="button" class="gboard-layout-btn" id="gboard-layout-btn" title="Layout wechseln (QWERTZ / QWERTY / AZERTY)">QWERTZ</button>
         <span class="gboard-target-pill" id="gboard-target-name">Eingabe</span>
         <button type="button" class="icon-btn" id="gboard-close-btn" title="Tastatur ausblenden" style="width:30px;height:30px;">
           <span class="material-symbols-rounded" style="font-size:18px;">keyboard_hide</span>
@@ -851,9 +1027,40 @@ const AndroidOS = (() => {
     `;
 
     oskEl.addEventListener('mousedown', e => e.preventDefault());
-    oskEl.addEventListener('pointerdown', e => e.preventDefault());
+    oskEl.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      const keyBtn = e.target.closest('.gboard-key');
+      if (!keyBtn || !activeInput || keyBtn.dataset.char === undefined) return;
+      const baseChar = decodeURIComponent(keyBtn.dataset.baseChar || keyBtn.dataset.char || '');
+      if (!getVariantsForBaseChar(baseChar).length) return;
+
+      clearTimeout(longPressTimer);
+      longPressTriggered = false;
+      longPressSourceKey = keyBtn;
+      longPressTimer = setTimeout(() => {
+        if (longPressSourceKey === keyBtn) {
+          showLongPressPopover(keyBtn, baseChar);
+        }
+      }, 420);
+    });
+
+    const cancelPendingLongPress = () => {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+      longPressSourceKey = null;
+    };
+
+    oskEl.addEventListener('pointerup', cancelPendingLongPress);
+    oskEl.addEventListener('pointercancel', cancelPendingLongPress);
+    oskEl.addEventListener('pointerleave', cancelPendingLongPress);
 
     oskEl.addEventListener('click', e => {
+      const layoutBtn = e.target.closest('#gboard-layout-btn');
+      if (layoutBtn) {
+        lastOskKeyClickAt = Date.now();
+        cycleOskLayout();
+        return;
+      }
       const closeBtn = e.target.closest('#gboard-close-btn');
       if (closeBtn) {
         closeOsk();
@@ -863,6 +1070,12 @@ const AndroidOS = (() => {
       if (!keyBtn || !activeInput) return;
 
       lastOskKeyClickAt = Date.now();
+      cancelPendingLongPress();
+
+      if (longPressTriggered) {
+        longPressTriggered = false;
+        return;
+      }
 
       const special = keyBtn.dataset.key;
       if (special === 'SHIFT') {
@@ -872,11 +1085,13 @@ const AndroidOS = (() => {
       }
       if (special === '?123') {
         symMode = true;
+        hideLongPressPopover();
         renderKeys();
         return;
       }
       if (special === 'ABC') {
         symMode = false;
+        hideLongPressPopover();
         renderKeys();
         return;
       }
@@ -962,6 +1177,7 @@ const AndroidOS = (() => {
   }
 
   function closeOsk() {
+    hideLongPressPopover();
     if (activeInput) {
       restoreNativeKeyboard(activeInput);
     }
@@ -999,23 +1215,36 @@ const AndroidOS = (() => {
       if (!oskEl || !oskEl.classList.contains('open')) return;
       if (Date.now() - lastOskKeyClickAt < 80) return;
       const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
-      if (path.includes(oskEl) || (e.target && e.target.isConnected && (oskEl.contains(e.target) || isTextInput(e.target)))) {
+      if (
+        path.includes(oskEl) ||
+        (popoverEl && path.includes(popoverEl)) ||
+        (e.target && e.target.isConnected && (
+          oskEl.contains(e.target) ||
+          (popoverEl && popoverEl.contains(e.target)) ||
+          isTextInput(e.target)
+        ))
+      ) {
         return;
       }
       closeOsk();
     });
 
     window.addEventListener('resize', () => {
+      hideLongPressPopover();
       syncOskViewport();
       ensureInputVisible(activeInput);
     });
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
+        hideLongPressPopover();
         syncOskViewport();
         ensureInputVisible(activeInput);
       });
-      window.visualViewport.addEventListener('scroll', syncOskViewport);
+      window.visualViewport.addEventListener('scroll', () => {
+        hideLongPressPopover();
+        syncOskViewport();
+      });
     }
   }
   
