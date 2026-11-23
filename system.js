@@ -908,6 +908,9 @@ const AndroidOS = (() => {
     if (!oskEl || !oskEl.classList.contains('open')) return;
 
     const vv = window.visualViewport;
+    const visibleHeight = vv ? vv.height : window.innerHeight;
+    document.documentElement.style.setProperty('--osk-visible-vh', `${visibleHeight}px`);
+
     if (vv) {
       const bottomGap = Math.max(0, window.innerHeight - (vv.offsetTop + vv.height));
       oskEl.style.bottom = `${bottomGap}px`;
@@ -967,6 +970,7 @@ const AndroidOS = (() => {
     }
     const shell = document.querySelector('.android-shell');
     if (shell) shell.classList.remove('osk-open');
+    document.documentElement.style.removeProperty('--osk-visible-vh');
     activeInput = null;
   }
 
@@ -974,7 +978,6 @@ const AndroidOS = (() => {
     if (oskListenersAttached) return;
     oskListenersAttached = true;
 
-    // Bereits vor dem Fokus inputmode="none" setzen, damit Touch-Browser gar nicht erst die Systemtastatur öffnen
     document.addEventListener('pointerdown', e => {
       if (!isOskEnabled()) return;
       if (isTextInput(e.target)) {
