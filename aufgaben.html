@@ -6,20 +6,76 @@
   <title>Aufgaben – Android</title>
   <link rel="stylesheet" href="system.css">
   <style>
+    .task-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .task-filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
     .task-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       padding: 14px 16px;
       border-radius: 18px;
       background: var(--md-sys-color-surface-container-low);
       border: 1px solid var(--md-sys-color-outline-variant);
       margin-bottom: 10px;
       cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.08s ease;
+    }
+    .task-item:active {
+      transform: scale(0.99);
     }
     .task-item.done {
-      opacity: 0.55;
+      opacity: 0.58;
+    }
+    .task-item.done .task-title {
       text-decoration: line-through;
+    }
+    .task-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+    .task-title {
+      font-weight: 500;
+      word-break: break-word;
+    }
+    .prio-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .prio-high {
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+    }
+    .prio-normal {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+    .prio-low {
+      background: var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    .task-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
     }
   </style>
 </head>
@@ -35,7 +91,7 @@
         </a>
         <div>
           <h1 style="font-size:22px;font-weight:700;">Aufgaben</h1>
-          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">To-Dos & Checklisten</div>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="task-summary">To-Dos & Checklisten</div>
         </div>
       </div>
       <button class="m3-btn m3-btn-tonal" style="padding:10px 14px;" onclick="clearDone()">
@@ -44,11 +100,25 @@
     </header>
 
     <main class="app-main">
-      <div style="display:flex;gap:10px;margin-bottom:18px;">
-        <input type="text" id="task-input" class="m3-input" placeholder="Neue Aufgabe hinzufügen…">
-        <button class="m3-btn" onclick="addItem()">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <input type="text" id="task-input" class="m3-input" style="flex:1;min-width:180px;" placeholder="Neue Aufgabe hinzufügen…">
+        <select id="task-prio" class="m3-input" style="width:auto;min-width:118px;" aria-label="Priorität">
+          <option value="normal">Normal</option>
+          <option value="high">Hoch</option>
+          <option value="low">Niedrig</option>
+        </select>
+        <button class="m3-btn" onclick="addItem()" title="Aufgabe hinzufügen">
           <span class="material-symbols-rounded">add</span>
         </button>
+      </div>
+
+      <div class="task-toolbar">
+        <div class="task-filters" id="task-filters">
+          <button type="button" class="m3-chip active" data-filter="all" onclick="setFilter('all')">Alle</button>
+          <button type="button" class="m3-chip" data-filter="open" onclick="setFilter('open')">Offen</button>
+          <button type="button" class="m3-chip" data-filter="done" onclick="setFilter('done')">Erledigt</button>
+        </div>
+        <span style="font-size:12px;font-weight:600;color:var(--md-sys-color-on-surface-variant);" id="task-count">0 offen</span>
       </div>
 
       <div id="task-list"></div>
@@ -62,12 +132,40 @@
   <script>
     AndroidOS.mountShell();
 
+    let currentFilter = 'all';
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('#task-filters .m3-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+      renderList();
+    }
+
     function addItem() {
       const inp = document.getElementById('task-input');
+      const prioEl = document.getElementById('task-prio');
       const text = inp.value.trim();
       if (!text) return;
+      const priority = ['high', 'normal', 'low'].includes(prioEl.value) ? prioEl.value : 'normal';
+
       AndroidOS.updateState(s => {
-        s.tasks.unshift({ id: 's_' + Date.now(), text, done: false });
+        s.tasks = Array.isArray(s.tasks) ? s.tasks : [];
+        s.tasks.unshift({
+          id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+          text,
+          priority,
+          done: false
+        });
       });
       inp.value = '';
       renderList();
@@ -75,41 +173,95 @@
 
     function toggleItem(id) {
       AndroidOS.updateState(s => {
-        const it = s.tasks.find(x => x.id === id);
+        const it = (s.tasks || []).find(x => x.id === id);
         if (it) it.done = !it.done;
       });
       renderList();
     }
 
-    function removeItem(id) {
+    function editItem(id, e) {
+      if (e) e.stopPropagation();
+      const st = AndroidOS.getState();
+      const current = (st.tasks || []).find(x => x.id === id);
+      if (!current) return;
+
+      const updated = window.prompt('Aufgabe bearbeiten:', current.text);
+      if (updated === null) return;
+      const clean = updated.trim();
+      if (!clean) return;
+
       AndroidOS.updateState(s => {
-        s.tasks = s.tasks.filter(x => x.id !== id);
+        const it = (s.tasks || []).find(x => x.id === id);
+        if (it) it.text = clean;
+      });
+      renderList();
+    }
+
+    function removeItem(id, e) {
+      if (e) e.stopPropagation();
+      AndroidOS.updateState(s => {
+        s.tasks = (s.tasks || []).filter(x => x.id !== id);
       });
       renderList();
     }
 
     function clearDone() {
       AndroidOS.updateState(s => {
-        s.tasks = s.tasks.filter(x => !x.done);
+        s.tasks = (s.tasks || []).filter(x => !x.done);
       });
       renderList();
     }
 
+    function getPrioMeta(prio) {
+      if (prio === 'high') return { label: 'Hoch', cls: 'prio-high' };
+      if (prio === 'low') return { label: 'Niedrig', cls: 'prio-low' };
+      return { label: 'Normal', cls: 'prio-normal' };
+    }
+
     function renderList() {
-      const items = AndroidOS.getState().tasks || [];
-      document.getElementById('task-list').innerHTML = items.map(it => `
-        <div class="task-item ${it.done ? 'done' : ''}" onclick="toggleItem('${it.id}')">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <span class="material-symbols-rounded ${it.done ? 'filled' : ''}" style="color:var(--md-sys-color-primary);">
-              ${it.done ? 'check_circle' : 'radio_button_unchecked'}
-            </span>
-            <span style="font-weight:500;">${it.text}</span>
+      const allItems = AndroidOS.getState().tasks || [];
+      const openCount = allItems.filter(x => !x.done).length;
+      const doneCount = allItems.length - openCount;
+
+      document.getElementById('task-count').textContent = `${openCount} offen · ${doneCount} erledigt`;
+      document.getElementById('task-summary').textContent = allItems.length
+        ? `${openCount} offene Aufgaben`
+        : 'To-Dos & Checklisten';
+
+      const visible = allItems.filter(it => {
+        if (currentFilter === 'open') return !it.done;
+        if (currentFilter === 'done') return Boolean(it.done);
+        return true;
+      });
+
+      const listEl = document.getElementById('task-list');
+      if (visible.length === 0) {
+        listEl.innerHTML = `<div class="m3-card" style="text-align:center;color:var(--md-sys-color-on-surface-variant);">Keine Aufgaben in dieser Ansicht.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = visible.map(it => {
+        const pMeta = getPrioMeta(it.priority);
+        return `
+          <div class="task-item ${it.done ? 'done' : ''}" onclick="toggleItem('${it.id}')">
+            <div class="task-main">
+              <span class="material-symbols-rounded ${it.done ? 'filled' : ''}" style="color:var(--md-sys-color-primary);flex-shrink:0;">
+                ${it.done ? 'check_circle' : 'radio_button_unchecked'}
+              </span>
+              <span class="task-title">${escapeHtml(it.text)}</span>
+              <span class="prio-badge ${pMeta.cls}">${pMeta.label}</span>
+            </div>
+            <div class="task-actions">
+              <button type="button" class="icon-btn" style="width:34px;height:34px;" onclick="editItem('${it.id}', event)" title="Bearbeiten">
+                <span class="material-symbols-rounded" style="font-size:18px;">edit</span>
+              </button>
+              <button type="button" class="icon-btn" style="width:34px;height:34px;" onclick="removeItem('${it.id}', event)" title="Löschen">
+                <span class="material-symbols-rounded" style="font-size:18px;">close</span>
+              </button>
+            </div>
           </div>
-          <button class="icon-btn" style="width:34px;height:34px;" onclick="event.stopPropagation();removeItem('${it.id}')">
-            <span class="material-symbols-rounded" style="font-size:18px;">close</span>
-          </button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     document.getElementById('task-input').addEventListener('keydown', e => {
