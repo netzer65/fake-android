@@ -8,22 +8,94 @@
   <style>
     .big-clock {
       font-family: var(--font-display);
-      font-size: clamp(44px, 9vw, 68px);
+      font-size: clamp(42px, 8.5vw, 66px);
       font-weight: 700;
       letter-spacing: -0.03em;
+      line-height: 1.05;
       color: var(--md-sys-color-primary);
+    }
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .world-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .world-card {
+      background: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 20px;
+      padding: 12px 14px;
+    }
+    .world-time {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .world-sub {
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2px;
     }
     .timer-card {
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .timer-top {
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 12px;
+      gap: 12px;
     }
     .timer-digits {
       font-family: var(--font-mono);
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 700;
+    }
+    .timer-digits.done {
+      color: var(--md-sys-color-primary);
+    }
+    .progress-track {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--md-sys-color-surface-container-highest);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--md-sys-color-primary);
+      transition: width 0.25s linear;
+    }
+    .sw-digits {
+      font-family: var(--font-mono);
+      font-size: clamp(38px, 8vw, 56px);
+      font-weight: 700;
+      text-align: center;
+      margin: 12px 0 18px;
+      color: var(--md-sys-color-primary);
+    }
+    .lap-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 4px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    .lap-item:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
@@ -39,34 +111,89 @@
         </a>
         <div>
           <h1 style="font-size:22px;font-weight:700;">Uhr & Timer</h1>
-          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Weltzeit & parallele Timer</div>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Weltzeit, Timer & Stoppuhr</div>
         </div>
       </div>
+      <button class="icon-btn" id="sound-toggle-btn" onclick="toggleAlarmSound()" title="Signalton umschalten">
+        <span class="material-symbols-rounded filled" id="sound-icon">notifications_active</span>
+      </button>
     </header>
 
     <main class="app-main">
-      <div class="m3-card-filled" style="margin-bottom:18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;">
-        <div>
-          <div id="live-clock" class="big-clock">12:00:00</div>
-          <div id="live-date" style="font-weight:600;color:var(--md-sys-color-on-surface-variant);">Nordhorn · MEZ</div>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          <button class="m3-chip" onclick="addTimer('Kurze Pause', 5)">+ 5 Min.</button>
-          <button class="m3-chip" onclick="addTimer('Pomodoro Fokus', 25)">+ 25 Min.</button>
-          <button class="m3-chip" onclick="addTimer('Arbeitssprint', 45)">+ 45 Min.</button>
+      <div class="m3-card-filled" style="margin-bottom:14px;">
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;">
+          <div>
+            <div id="live-clock" class="big-clock">12:00:00</div>
+            <div id="live-date" style="font-weight:600;color:var(--md-sys-color-on-surface-variant);margin-top:4px;">Nordhorn</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <button class="m3-chip" onclick="addTimer('Kurze Pause', 300)">+ 5 Min.</button>
+            <button class="m3-chip" onclick="addTimer('Pomodoro Fokus', 1500)">+ 25 Min.</button>
+            <button class="m3-chip" onclick="addTimer('Arbeitssprint', 2700)">+ 45 Min.</button>
+          </div>
         </div>
       </div>
 
-      <div class="m3-card" style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;">
-        <input type="text" id="t-label" class="m3-input" style="flex:2;min-width:180px;" placeholder="Timer-Name (z. B. Fokus-Session)">
-        <input type="number" id="t-mins" class="m3-input" style="flex:1;min-width:110px;" value="15" min="1" max="240">
-        <button class="m3-btn" onclick="createCustomTimer()">
-          <span class="material-symbols-rounded" style="font-size:18px;">add</span>
-          <span>Starten</span>
+      <div class="mode-tabs">
+        <button class="m3-chip active" data-mode="timer" onclick="switchTab('timer')" id="tab-timer">
+          <span class="material-symbols-rounded" style="font-size:18px;">timer</span>
+          <span>Timer</span>
+        </button>
+        <button class="m3-chip" data-mode="stopwatch" onclick="switchTab('stopwatch')" id="tab-stopwatch">
+          <span class="material-symbols-rounded" style="font-size:18px;">av_timer</span>
+          <span>Stoppuhr</span>
+        </button>
+        <button class="m3-chip" data-mode="world" onclick="switchTab('world')" id="tab-world">
+          <span class="material-symbols-rounded" style="font-size:18px;">public</span>
+          <span>Weltzeit</span>
         </button>
       </div>
 
-      <div id="timer-list"></div>
+      <!-- TIMER VIEW -->
+      <section id="view-timer">
+        <div class="m3-card" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="t-label" class="m3-input" style="flex:2;min-width:160px;" placeholder="Timer-Name (z. B. Fokus-Session)">
+          <input type="number" id="t-hours" class="m3-input" style="width:78px;" value="0" min="0" max="23" placeholder="Std" title="Stunden">
+          <input type="number" id="t-mins" class="m3-input" style="width:82px;" value="15" min="0" max="59" placeholder="Min" title="Minuten">
+          <input type="number" id="t-secs" class="m3-input" style="width:82px;" value="0" min="0" max="59" placeholder="Sek" title="Sekunden">
+          <button class="m3-btn" onclick="createCustomTimer()">
+            <span class="material-symbols-rounded" style="font-size:18px;">add</span>
+            <span>Starten</span>
+          </button>
+        </div>
+
+        <div id="timer-list"></div>
+      </section>
+
+      <!-- STOPWATCH VIEW -->
+      <section id="view-stopwatch" style="display:none;">
+        <div class="m3-card" style="margin-bottom:14px;">
+          <div class="sw-digits" id="sw-display">00:00.0</div>
+          <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+            <button class="m3-btn" onclick="toggleStopwatch()" id="sw-start-btn">
+              <span class="material-symbols-rounded" id="sw-start-icon">play_arrow</span>
+              <span id="sw-start-label">Start</span>
+            </button>
+            <button class="m3-btn m3-btn-tonal" onclick="recordLap()" id="sw-lap-btn">
+              <span class="material-symbols-rounded">flag</span>
+              <span>Runde</span>
+            </button>
+            <button class="m3-btn m3-btn-outlined" onclick="resetStopwatch()">
+              <span class="material-symbols-rounded">restart_alt</span>
+              <span>Reset</span>
+            </button>
+          </div>
+        </div>
+        <div class="m3-card" id="sw-laps-card" style="display:none;">
+          <div style="font-weight:700;font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-bottom:6px;">Rundenzeiten</div>
+          <div id="sw-laps-list"></div>
+        </div>
+      </section>
+
+      <!-- WORLD CLOCK VIEW -->
+      <section id="view-world" style="display:none;">
+        <div class="world-grid" id="world-grid"></div>
+      </section>
     </main>
 
     <nav id="sys-gesture-nav" class="gesture-nav"></nav>
@@ -77,11 +204,70 @@
   <script>
     AndroidOS.mountShell();
 
-    function addTimer(label, mins) {
-      const sec = mins * 60;
+    const WORLD_CITIES = [
+      { city: 'Nordhorn', tz: 'Europe/Berlin' },
+      { city: 'London', tz: 'Europe/London' },
+      { city: 'New York', tz: 'America/New_York' },
+      { city: 'Chicago', tz: 'America/Chicago' },
+      { city: 'São Paulo', tz: 'America/Sao_Paulo' },
+      { city: 'Dubai', tz: 'Asia/Dubai' },
+      { city: 'Tokio', tz: 'Asia/Tokyo' },
+      { city: 'Sydney', tz: 'Australia/Sydney' }
+    ];
+
+    let alarmSoundEnabled = true;
+    const alertedTimerIds = new Set();
+    let swRunning = false;
+    let swStartPerf = 0;
+    let swElapsedMs = 0;
+    let swLaps = [];
+
+    function playChime() {
+      if (!alarmSoundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const notes = [880, 1174.66, 880];
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.001, ctx.currentTime + idx * 0.16);
+          gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + idx * 0.16 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.16 + 0.15);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.16);
+          osc.stop(ctx.currentTime + idx * 0.16 + 0.16);
+        });
+      } catch (_) {}
+    }
+
+    function toggleAlarmSound() {
+      alarmSoundEnabled = !alarmSoundEnabled;
+      document.getElementById('sound-icon').textContent = alarmSoundEnabled ? 'notifications_active' : 'notifications_off';
+      AndroidOS.showToast(alarmSoundEnabled ? 'Timer-Signalton aktiviert' : 'Timer-Signalton stummgeschaltet');
+    }
+
+    function switchTab(mode) {
+      document.querySelectorAll('.mode-tabs .m3-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+      document.getElementById('view-timer').style.display = mode === 'timer' ? 'block' : 'none';
+      document.getElementById('view-stopwatch').style.display = mode === 'stopwatch' ? 'block' : 'none';
+      document.getElementById('view-world').style.display = mode === 'world' ? 'block' : 'none';
+      renderWorldClock();
+    }
+
+    function addTimer(label, totalSeconds) {
+      const sec = Math.max(1, Math.floor(totalSeconds));
+      const id = 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
       AndroidOS.updateState(s => {
+        s.timers = Array.isArray(s.timers) ? s.timers : [];
         s.timers.unshift({
-          id: 't_' + Date.now(),
+          id,
           label,
           duration: sec,
           remaining: sec,
@@ -94,45 +280,168 @@
 
     function createCustomTimer() {
       const label = document.getElementById('t-label').value.trim() || 'Timer';
-      const mins = Math.max(1, Number(document.getElementById('t-mins').value) || 10);
-      addTimer(label, mins);
+      const h = Math.max(0, Number(document.getElementById('t-hours').value) || 0);
+      const m = Math.max(0, Number(document.getElementById('t-mins').value) || 0);
+      const sVal = Math.max(0, Number(document.getElementById('t-secs').value) || 0);
+      const total = h * 3600 + m * 60 + sVal;
+      if (total <= 0) {
+        AndroidOS.showToast('Bitte eine Dauer größer als 0 Sekunden eingeben.');
+        return;
+      }
+      addTimer(label, total);
       document.getElementById('t-label').value = '';
     }
 
     function toggleTimer(id) {
       const now = Date.now();
+      alertedTimerIds.delete(id);
       AndroidOS.updateState(s => {
-        const t = s.timers.find(x => x.id === id);
-        if (!t) return;
-        if (t.running) {
-          t.remaining = Math.max(0, Math.ceil((t.endAt - now) / 1000));
-          t.running = false;
-          t.endAt = null;
+        const tm = (s.timers || []).find(x => x.id === id);
+        if (!tm) return;
+        if (tm.running) {
+          tm.remaining = Math.max(0, Math.ceil((tm.endAt - now) / 1000));
+          tm.running = false;
+          tm.endAt = null;
         } else {
-          if (t.remaining <= 0) t.remaining = t.duration;
-          t.running = true;
-          t.endAt = now + t.remaining * 1000;
+          if (tm.remaining <= 0) tm.remaining = tm.duration;
+          tm.running = true;
+          tm.endAt = now + tm.remaining * 1000;
+        }
+      });
+      renderTimers();
+    }
+
+    function addMinuteToTimer(id, extraSec = 60) {
+      const now = Date.now();
+      alertedTimerIds.delete(id);
+      AndroidOS.updateState(s => {
+        const tm = (s.timers || []).find(x => x.id === id);
+        if (!tm) return;
+        const curRem = tm.running && tm.endAt ? Math.max(0, Math.ceil((tm.endAt - now) / 1000)) : tm.remaining;
+        tm.remaining = curRem + extraSec;
+        tm.duration = Math.max(tm.duration, tm.remaining);
+        if (tm.running) {
+          tm.endAt = now + tm.remaining * 1000;
         }
       });
       renderTimers();
     }
 
     function resetTimer(id) {
+      alertedTimerIds.delete(id);
       AndroidOS.updateState(s => {
-        const t = s.timers.find(x => x.id === id);
-        if (!t) return;
-        t.running = false;
-        t.endAt = null;
-        t.remaining = t.duration;
+        const tm = (s.timers || []).find(x => x.id === id);
+        if (!tm) return;
+        tm.running = false;
+        tm.endAt = null;
+        tm.remaining = tm.duration;
       });
       renderTimers();
     }
 
     function deleteTimer(id) {
+      alertedTimerIds.delete(id);
       AndroidOS.updateState(s => {
-        s.timers = s.timers.filter(x => x.id !== id);
+        s.timers = (s.timers || []).filter(x => x.id !== id);
       });
       renderTimers();
+    }
+
+    function getCurrentStopwatchMs() {
+      return swRunning ? swElapsedMs + (performance.now() - swStartPerf) : swElapsedMs;
+    }
+
+    function formatStopwatch(ms) {
+      const totalTenths = Math.floor(Math.max(0, ms) / 100);
+      const tenths = totalTenths % 10;
+      const totalSec = Math.floor(totalTenths / 10);
+      const secs = totalSec % 60;
+      const mins = Math.floor(totalSec / 60) % 60;
+      const hrs = Math.floor(totalSec / 3600);
+      const base = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${tenths}`;
+      return hrs > 0 ? `${hrs}:${base}` : base;
+    }
+
+    function toggleStopwatch() {
+      if (swRunning) {
+        swElapsedMs += performance.now() - swStartPerf;
+        swRunning = false;
+      } else {
+        swStartPerf = performance.now();
+        swRunning = true;
+      }
+      renderStopwatch();
+    }
+
+    function recordLap() {
+      const cur = getCurrentStopwatchMs();
+      if (cur <= 0 && swLaps.length === 0) return;
+      swLaps.unshift({
+        nr: swLaps.length + 1,
+        total: formatStopwatch(cur)
+      });
+      renderStopwatch();
+    }
+
+    function resetStopwatch() {
+      swRunning = false;
+      swElapsedMs = 0;
+      swLaps = [];
+      renderStopwatch();
+    }
+
+    function renderStopwatch() {
+      document.getElementById('sw-display').textContent = formatStopwatch(getCurrentStopwatchMs());
+      document.getElementById('sw-start-icon').textContent = swRunning ? 'pause' : 'play_arrow';
+      document.getElementById('sw-start-label').textContent = swRunning ? 'Pause' : 'Start';
+
+      const lapsCard = document.getElementById('sw-laps-card');
+      const lapsList = document.getElementById('sw-laps-list');
+      if (swLaps.length > 0) {
+        lapsCard.style.display = 'block';
+        lapsList.innerHTML = swLaps.map(l => `
+          <div class="lap-item">
+            <span>Runde #${l.nr}</span>
+            <strong>${l.total}</strong>
+          </div>
+        `).join('');
+      } else {
+        lapsCard.style.display = 'none';
+      }
+    }
+
+    function renderWorldClock() {
+      const grid = document.getElementById('world-grid');
+      if (!grid || document.getElementById('view-world').style.display === 'none') return;
+      const now = new Date();
+      grid.innerHTML = WORLD_CITIES.map(item => {
+        const timeStr = now.toLocaleTimeString('de-DE', {
+          timeZone: item.tz,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        const hourNum = Number(now.toLocaleTimeString('en-GB', {
+          timeZone: item.tz,
+          hour: '2-digit',
+          hour12: false
+        }));
+        const isDay = hourNum >= 6 && hourNum < 20;
+        const dayLabel = now.toLocaleDateString('de-DE', {
+          timeZone: item.tz,
+          weekday: 'short'
+        });
+        return `
+          <div class="world-card">
+            <div style="font-weight:700;font-size:14px;">${item.city}</div>
+            <div class="world-time">${timeStr}</div>
+            <div class="world-sub">
+              <span>${dayLabel}</span>
+              <span class="material-symbols-rounded" style="font-size:16px;">${isDay ? 'light_mode' : 'dark_mode'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function renderTimers() {
@@ -141,35 +450,57 @@
       document.getElementById('live-date').textContent = `${AndroidOS.formatDate(now)} · Nordhorn`;
 
       const timers = AndroidOS.getActiveTimers();
+      timers.forEach(tm => {
+        if (tm.finished && !alertedTimerIds.has(tm.id)) {
+          alertedTimerIds.add(tm.id);
+          playChime();
+          AndroidOS.showToast(`Timer „${tm.label}“ ist abgelaufen!`);
+        }
+      });
+
       const list = document.getElementById('timer-list');
       if (timers.length === 0) {
         list.innerHTML = `<div class="m3-card" style="text-align:center;color:var(--md-sys-color-on-surface-variant);">Keine Timer aktiv.</div>`;
         return;
       }
 
-      list.innerHTML = timers.map(t => `
-        <div class="m3-card timer-card">
-          <div>
-            <div style="font-size:14px;font-weight:700;color:var(--md-sys-color-primary);margin-bottom:4px;">${t.label}</div>
-            <div class="timer-digits">${t.finished ? '00:00 · Fertig!' : AndroidOS.formatSeconds(t.remaining)}</div>
+      list.innerHTML = timers.map(tm => {
+        const pct = tm.duration > 0 ? Math.max(0, Math.min(100, (tm.remaining / tm.duration) * 100)) : 0;
+        return `
+          <div class="m3-card timer-card">
+            <div class="timer-top">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--md-sys-color-primary);margin-bottom:2px;">${tm.label}</div>
+                <div class="timer-digits ${tm.finished ? 'done' : ''}">${tm.finished ? '00:00 · Fertig!' : AndroidOS.formatSeconds(tm.remaining)}</div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button class="m3-chip" onclick="addMinuteToTimer('${tm.id}', 60)" title="+1 Minute">+1m</button>
+                <button class="m3-btn" style="padding:10px 14px;" onclick="toggleTimer('${tm.id}')">
+                  <span class="material-symbols-rounded">${tm.running ? 'pause' : 'play_arrow'}</span>
+                </button>
+                <button class="icon-btn" onclick="resetTimer('${tm.id}')" title="Zurücksetzen">
+                  <span class="material-symbols-rounded">restart_alt</span>
+                </button>
+                <button class="icon-btn" onclick="deleteTimer('${tm.id}')" title="Löschen">
+                  <span class="material-symbols-rounded">delete</span>
+                </button>
+              </div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${pct}%;"></div>
+            </div>
           </div>
-          <div style="display:flex;gap:8px;">
-            <button class="m3-btn" style="padding:10px 14px;" onclick="toggleTimer('${t.id}')">
-              <span class="material-symbols-rounded">${t.running ? 'pause' : 'play_arrow'}</span>
-            </button>
-            <button class="icon-btn" onclick="resetTimer('${t.id}')" title="Zurücksetzen">
-              <span class="material-symbols-rounded">restart_alt</span>
-            </button>
-            <button class="icon-btn" onclick="deleteTimer('${t.id}')" title="Löschen">
-              <span class="material-symbols-rounded">delete</span>
-            </button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      renderWorldClock();
     }
 
     renderTimers();
     setInterval(renderTimers, 1000);
+    setInterval(() => {
+      if (swRunning) renderStopwatch();
+    }, 100);
   </script>
 </body>
 </html>
