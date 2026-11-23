@@ -669,14 +669,16 @@ const AndroidOS = (() => {
     dotEl.style.background = '#34D399';
   }
 
-  /* === Gboard-like Optional On-Screen Keyboard Controller === */
-  const ROWS_LETTERS = [    ['q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'ü'],
+/* === Gboard-like Optional On-Screen Keyboard Controller === */
+  const ROWS_LETTERS = [
+    ['q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'ü'],
     ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ö', 'ä'],
     ['SHIFT', 'y', 'x', 'c', 'v', 'b', 'n', 'm', 'ß', 'BACKSPACE'],
     ['?123', ',', 'SPACE', '.', 'ENTER']
   ];
 
-  const ROWS_SYMBOLS = [    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'],
+  const ROWS_SYMBOLS = [
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'],
     ['@', '#', '€', '%', '&', '*', '+', '/', '(', ')', '='],
     ['!', '?', ':', ';', '"', "'", '_', '~', '[', 'BACKSPACE'],
     ['ABC', ',', 'SPACE', '.', 'ENTER']
@@ -713,6 +715,24 @@ const AndroidOS = (() => {
       return ['text', 'search', 'email', 'url', 'tel', 'number', 'password'].includes(tType);
     }
     return Boolean(el.isContentEditable);
+  }
+
+  function suppressNativeKeyboard(el) {
+    if (!el || el.dataset.oskPrevInputmode !== undefined) return;
+    const prev = el.getAttribute('inputmode');
+    el.dataset.oskPrevInputmode = prev !== null ? prev : '__none__';
+    el.setAttribute('inputmode', 'none');
+  }
+
+  function restoreNativeKeyboard(el) {
+    if (!el || el.dataset.oskPrevInputmode === undefined) return;
+    const prev = el.dataset.oskPrevInputmode;
+    if (prev === '__none__') {
+      el.removeAttribute('inputmode');
+    } else {
+      el.setAttribute('inputmode', prev);
+    }
+    delete el.dataset.oskPrevInputmode;
   }
 
   function dispatchInputEvents(el) {
@@ -884,21 +904,67 @@ const AndroidOS = (() => {
     return oskEl;
   }
 
+  function syncOskViewport() {
+    if (!oskEl || !oskEl.classList.contains('open')) return;
+
+    const vv = window.visualViewport;
+    if (vv) {
+      const bottomGap = Math.max(0, window.innerHeight - (vv.offsetTop + vv.height));
+      oskEl.style.bottom = `${bottomGap}px`;
+      oskEl.style.left = `${Math.max(0, vv.offsetLeft)}px`;
+      oskEl.style.width = `${vv.width}px`;
+    } else {
+      oskEl.style.bottom = '0px';
+      oskEl.style.left = '0px';
+      oskEl.style.width = '100%';
+    }
+
+    const h = oskEl.offsetHeight || 250;
+    document.documentElement.style.setProperty('--osk-height', `${h}px`);
+  }
+
+  function ensureInputVisible(inputEl) {
+    if (!inputEl || !oskEl || !oskEl.classList.contains('open')) return;
+    const vvHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const oskHeight = oskEl.offsetHeight || 250;
+    const visibleBottom = vvHeight - oskHeight - 16;
+    const rect = inputEl.getBoundingClientRect();
+
+    if (rect.bottom > visibleBottom || rect.top < 48) {
+      inputEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }
+
   function openOsk(inputEl) {
     if (!isOskEnabled() || !isTextInput(inputEl)) return;
+    if (activeInput && activeInput !== inputEl) {
+      restoreNativeKeyboard(activeInput);
+    }
     activeInput = inputEl;
+    suppressNativeKeyboard(inputEl);
+
     const el = ensureOskElement();
     renderKeys();
     el.classList.add('open');
     const shell = document.querySelector('.android-shell');
     if (shell) shell.classList.add('osk-open');
-    try {
-      inputEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    } catch (_) {}
+
+    requestAnimationFrame(() => {
+      syncOskViewport();
+      ensureInputVisible(inputEl);
+    });
   }
 
   function closeOsk() {
-    if (oskEl) oskEl.classList.remove('open');
+    if (activeInput) {
+      restoreNativeKeyboard(activeInput);
+    }
+    if (oskEl) {
+      oskEl.classList.remove('open');
+      oskEl.style.bottom = '0px';
+      oskEl.style.left = '0px';
+      oskEl.style.width = '';
+    }
     const shell = document.querySelector('.android-shell');
     if (shell) shell.classList.remove('osk-open');
     activeInput = null;
@@ -907,6 +973,14 @@ const AndroidOS = (() => {
   function attachOskListeners() {
     if (oskListenersAttached) return;
     oskListenersAttached = true;
+
+    // Bereits vor dem Fokus inputmode="none" setzen, damit Touch-Browser gar nicht erst die Systemtastatur öffnen
+    document.addEventListener('pointerdown', e => {
+      if (!isOskEnabled()) return;
+      if (isTextInput(e.target)) {
+        suppressNativeKeyboard(e.target);
+      }
+    }, true);
 
     document.addEventListener('focusin', e => {
       if (!isOskEnabled()) return;
@@ -920,6 +994,19 @@ const AndroidOS = (() => {
       if (oskEl.contains(e.target) || isTextInput(e.target)) return;
       closeOsk();
     });
+
+    window.addEventListener('resize', () => {
+      syncOskViewport();
+      ensureInputVisible(activeInput);
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        syncOskViewport();
+        ensureInputVisible(activeInput);
+      });
+      window.visualViewport.addEventListener('scroll', syncOskViewport);
+    }
   }
 
   function mountShell(options = {}) {
