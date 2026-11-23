@@ -235,13 +235,13 @@
           <span class="material-symbols-rounded" style="color:var(--md-sys-color-on-surface-variant);">chevron_right</span>
         </button>
 
-        <button class="settings-item" data-keywords="system language pin backup reset power restart off" onclick="openSettingsOverlay('drawer-system')">
+        <button class="settings-item" data-keywords="system language pin keyboard gboard osk backup reset power restart off" onclick="openSettingsOverlay('drawer-system')">
           <span class="settings-badge" style="background:#E6E0E9;color:#381E72;">
             <span class="material-symbols-rounded filled">settings</span>
           </span>
           <div style="flex:1;">
             <div class="settings-item-title" id="t-system">System & Backup</div>
-            <div class="settings-item-sub" id="s-system">Language, PIN, backup, restart & power off</div>
+            <div class="settings-item-sub" id="s-system">Language, PIN, keyboard, backup, restart & power off</div>
           </div>
           <span class="material-symbols-rounded" style="color:var(--md-sys-color-on-surface-variant);">chevron_right</span>
         </button>
@@ -249,664 +249,260 @@
 
       <!-- Hidden staging vault for section detail panels -->
       <div id="drawer-vault" style="display:none;">
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-network">
-        <div class="mini-row">
-          <div>
-            <strong id="d-wifi-lbl">Wi-Fi</strong>
-            <div class="settings-item-sub" id="d-wifi-val">Connected</div>
+        <div class="m3-card detail-drawer" id="drawer-network">
+          <div class="mini-row">
+            <div>
+              <strong id="d-wifi-lbl">Wi-Fi</strong>
+              <div class="settings-item-sub" id="d-wifi-val">Connected</div>
+            </div>
+            <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('wifi')">Toggle</button>
           </div>
-          <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('wifi')">Toggle</button>
-        </div>
-        <div class="mini-row">
-          <div>
-            <strong id="d-dnd-lbl">Do Not Disturb</strong>
-            <div class="settings-item-sub" id="d-dnd-val">Off</div>
-          </div>
-          <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('dnd')">Toggle</button>
-        </div>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-devices">
-        <div class="mini-row">
-          <div>
-            <strong>Bluetooth</strong>
-            <div class="settings-item-sub" id="d-bt-val">On</div>
-          </div>
-          <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('bluetooth')">Toggle</button>
-        </div>
-      </div>
-
-      <!-- Group 2: Apps, Notifications, Sound & vibration, Modes -->
-      <div class="settings-group" id="group-2">
-        <button class="settings-item" data-keywords="apps assistant recent default anwendungen play store" onclick="window.location.href='play.html'">
-          <span class="settings-badge" style="background:#D8E2FF;color:#1D4ED8;">
-            <span class="material-symbols-rounded filled">apps</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-apps">Apps</div>
-            <div class="settings-item-sub" id="s-apps">Assistant, recent apps, default apps</div>
-          </div>
-        </button>
-
-        <button class="settings-item" data-keywords="notifications history conversations benachrichtigungen" onclick="toggleDrawer('drawer-notif')">
-          <span class="settings-badge" style="background:#F7D5E8;color:#9D174D;">
-            <span class="material-symbols-rounded filled">notifications</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-notif">Notifications</div>
-            <div class="settings-item-sub" id="s-notif">Notification history, conversations</div>
-          </div>
-        </button>
-
-        <button class="settings-item" data-keywords="sound vibration volume haptics ton vibrieren lautstärke" onclick="toggleDrawer('drawer-sound')">
-          <span class="settings-badge" style="background:#F8D4E6;color:#9D174D;">
-            <span class="material-symbols-rounded filled">volume_up</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-sound">Sound and vibration</div>
-            <div class="settings-item-sub" id="s-sound">Volume and haptics</div>
-          </div>
-        </button>
-
-        <button class="settings-item" data-keywords="modes dnd bedtime driving modi nicht stören" onclick="toggleDrawer('drawer-modes')">
-          <span class="settings-badge" style="background:#F5D2E4;color:#831843;">
-            <span class="material-symbols-rounded filled">do_not_disturb_on</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-modes">Modes</div>
-            <div class="settings-item-sub" id="s-modes">Do Not Disturb, Bedtime, Driving</div>
-          </div>
-        </button>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-notif">
-        <div class="mini-row">
-          <span>Do Not Disturb</span>
-          <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('dnd')" id="btn-dnd-drawer">Toggle</button>
-        </div>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-sound">
-        <div class="mini-row">
-          <span>Haptics & System Sound</span>
-          <span class="settings-item-sub">Active</span>
-        </div>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-modes">
-        <div class="mini-row">
-          <span>Do Not Disturb</span>
-          <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('dnd')">Toggle</button>
-        </div>
-      </div>
-
-      <!-- Group 3: Display & touch, Wallpaper & style, Battery -->
-      <div class="settings-group" id="group-3">
-        <button class="settings-item" data-keywords="display touch dark theme brightness helligkeit dunkelmodus" onclick="toggleDrawer('drawer-display')">
-          <span class="settings-badge" style="background:#FBE2C4;color:#9A4E00;">
-            <span class="material-symbols-rounded filled">contrast</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-display">Display and touch</div>
-            <div class="settings-item-sub" id="s-display">Dark theme, font size, touch</div>
-          </div>
-        </button>
-
-        <button class="settings-item" data-keywords="wallpaper style colours palette theme design farben" onclick="toggleDrawer('drawer-style')">
-          <span class="settings-badge" style="background:#FCE0C2;color:#A14900;">
-            <span class="material-symbols-rounded filled">palette</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-style">Wallpaper and style</div>
-            <div class="settings-item-sub" id="s-style">Colours, themed icons, app grid</div>
-          </div>
-        </button>
-
-        <button class="settings-item" data-keywords="battery akku charging sync laden" onclick="toggleDrawer('drawer-battery')">
-          <span class="settings-badge" style="background:#D2F2DF;color:#146C43;">
-            <span class="material-symbols-rounded filled">battery_full</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-battery">Battery</div>
-            <div class="settings-item-sub" id="s-battery">94% · Device battery</div>
-          </div>
-        </button>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-display">
-        <div class="mini-row">
-          <div>
-            <strong id="d-mode-lbl">Theme Mode</strong>
-            <div class="settings-item-sub" id="d-mode-val">light</div>
-          </div>
-          <button class="m3-btn m3-btn-tonal" onclick="toggleMode()" id="btn-mode-toggle">Switch</button>
-        </div>
-        <div style="padding-top:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px;">
-            <span id="d-bright-lbl">Brightness</span>
-            <span id="d-bright-val">100%</span>
-          </div>
-          <input type="range" id="set-bright" min="45" max="100" style="width:100%;accent-color:var(--md-sys-color-primary);" oninput="changeBrightness(this.value)">
-        </div>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-style">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="m3-chip" data-th="ocean" onclick="setTheme('ocean')">Ocean</button>
-          <button class="m3-chip" data-th="forest" onclick="setTheme('forest')">Forest</button>
-          <button class="m3-chip" data-th="violet" onclick="setTheme('violet')">Violet</button>
-          <button class="m3-chip" data-th="amber" onclick="setTheme('amber')">Amber</button>
-          <button class="m3-chip" data-th="rose" onclick="setTheme('rose')">Rose</button>
-          <button class="m3-chip" data-th="citrus" onclick="setTheme('citrus')">Citrus</button>
-          <button class="m3-chip" data-th="slate" onclick="setTheme('slate')">Slate</button>
-          <button class="m3-chip" data-th="mono" onclick="setTheme('mono')">Mono</button>
-          <button class="m3-chip" data-th="sunset" onclick="setTheme('sunset')">Sunset</button>
-          <button class="m3-chip" data-th="lagoon" onclick="setTheme('lagoon')">Lagoon</button>
-          <button class="m3-chip" data-th="berry" onclick="setTheme('berry')">Berry</button>
-          <button class="m3-chip" data-th="sandstone" onclick="setTheme('sandstone')">Sandstone</button>
-        </div>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-battery">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-          <div>
-            <strong id="bat-detail-title">Battery Status</strong>
-            <div class="settings-item-sub" id="bat-sync-source">Checking device battery API…</div>
-          </div>
-          <button class="m3-btn m3-btn-tonal" onclick="manualBatterySync()">
-            <span class="material-symbols-rounded" style="font-size:18px;">sync</span>
-            <span id="bat-sync-btn">Sync</span>
-          </button>
-        </div>
-        <div class="meter-bar">
-          <div class="meter-fill" id="bat-meter-fill" style="width:94%;"></div>
-        </div>
-        <div id="bat-manual-controls" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
-          <label class="settings-item-sub" id="bat-sim-lbl">Simulated level:</label>
-          <input type="range" min="5" max="100" id="bat-sim-range" style="accent-color:var(--md-sys-color-primary);" oninput="setSimulatedBattery(this.value)">
-          <button class="m3-chip" id="bat-chg-chip" onclick="toggleSimulatedCharging()">Charging</button>
-        </div>
-      </div>
-
-      <!-- Group 4: Google Account, Family Link & System -->
-      <div class="settings-group" id="group-4">
-        <button class="settings-item" data-keywords="google account konto sync drive photos contacts" onclick="toggleDrawer('drawer-google')">
-          <span class="settings-badge" style="background:#D1E4FF;color:#00497D;">
-            <span class="material-symbols-rounded filled">account_circle</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-account">Google Account</div>
-            <div class="settings-item-sub" id="s-account">Guest User · guest.user@example.com</div>
-          </div>
-        </button>
-
-        <button class="settings-item" data-keywords="family link parental screen time limits bedtime" onclick="toggleDrawer('drawer-family')">
-          <span class="settings-badge" style="background:#D1E8D9;color:#1B4F38;">
-            <span class="material-symbols-rounded filled">family_restroom</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-family">Family Link</div>
-            <div class="settings-item-sub" id="s-family">Active · 180 min daily limit</div>
-          </div>
-        </button>
-
-        <button class="settings-item" data-keywords="system language pin backup reset power restart off" onclick="toggleDrawer('drawer-system')">
-          <span class="settings-badge" style="background:#E6E0E9;color:#381E72;">
-            <span class="material-symbols-rounded filled">settings</span>
-          </span>
-          <div style="flex:1;">
-            <div class="settings-item-title" id="t-system">System & Backup</div>
-            <div class="settings-item-sub" id="s-system">Language, PIN, backup, restart & power off</div>
-          </div>
-        </button>
-      </div>
-
-      <!-- Google Account Replica Drawer -->
-      <div class="m3-card detail-drawer" id="drawer-google">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
-          <div>
-            <div style="font-weight:700;font-size:16px;" id="ga-disp-name">Guest User</div>
-            <div class="settings-item-sub" id="ga-disp-email">guest.user@example.com</div>
-          </div>
-          <span class="status-pill" id="ga-status-pill">Synced</span>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-          <input type="text" id="ga-name-input" class="m3-input" placeholder="Account Name">
-          <input type="email" id="ga-email-input" class="m3-input" placeholder="Email">
-        </div>
-
-        <div class="mini-row">
-          <span>Google Drive & Docs</span>
-          <button class="m3-chip" id="ga-sync-drive" onclick="toggleAccountSync('syncDrive')">Sync</button>
-        </div>
-        <div class="mini-row">
-          <span>Google Photos</span>
-          <button class="m3-chip" id="ga-sync-photos" onclick="toggleAccountSync('syncPhotos')">Sync</button>
-        </div>
-        <div class="mini-row">
-          <span>Contacts</span>
-          <button class="m3-chip" id="ga-sync-contacts" onclick="toggleAccountSync('syncContacts')">Sync</button>
-        </div>
-
-        <div style="margin-top:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;">
-            <span id="ga-storage-lbl">Account Storage</span>
-            <span id="ga-storage-val">18.4 GB / 100 GB</span>
-          </div>
-          <div class="meter-bar">
-            <div class="meter-fill" style="width:18.4%;"></div>
+          <div class="mini-row">
+            <div>
+              <strong id="d-dnd-lbl">Do Not Disturb</strong>
+              <div class="settings-item-sub" id="d-dnd-val">Off</div>
+            </div>
+            <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('dnd')">Toggle</button>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-          <button class="m3-btn" onclick="saveGoogleAccount()" id="btn-save-ga">Save</button>
-        </div>
-      </div>
-
-      <!-- Family Link Replica Drawer -->
-      <div class="m3-card detail-drawer" id="drawer-family">
-        <div class="mini-row">
-          <div>
-            <strong id="fl-supervision-lbl">Parent Supervision</strong>
-            <div class="settings-item-sub" id="fl-parent-info">Parent: Alex Morgan</div>
-          </div>
-          <button class="m3-chip" id="fl-enabled-btn" onclick="toggleFamilyEnabled()">Enabled</button>
-        </div>
-
-        <div style="margin-top:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;">
-            <span id="fl-limit-lbl">Daily Screen Time Limit</span>
-            <span id="fl-limit-val">42 / 180 min</span>
-          </div>
-          <div class="meter-bar">
-            <div class="meter-fill" id="fl-limit-bar" style="width:23%;"></div>
-          </div>
-          <input type="range" min="30" max="480" step="15" id="fl-limit-range" style="width:100%;accent-color:var(--md-sys-color-primary);" oninput="updateFamilyLimit(this.value)">
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-          <div>
-            <label class="settings-item-sub" id="fl-bed-start-lbl">Bedtime start</label>
-            <input type="time" id="fl-bed-start" class="m3-input" onchange="updateFamilyBedtime()">
-          </div>
-          <div>
-            <label class="settings-item-sub" id="fl-bed-end-lbl">Bedtime end</label>
-            <input type="time" id="fl-bed-end" class="m3-input" onchange="updateFamilyBedtime()">
+        <div class="m3-card detail-drawer" id="drawer-devices">
+          <div class="mini-row">
+            <div>
+              <strong>Bluetooth</strong>
+              <div class="settings-item-sub" id="d-bt-val">On</div>
+            </div>
+            <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('bluetooth')">Toggle</button>
           </div>
         </div>
 
-        <div style="margin-top:12px;">
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;" id="fl-apps-lbl">App Limits</div>
+        <div class="m3-card detail-drawer" id="drawer-notif">
+          <div class="mini-row">
+            <span>Do Not Disturb</span>
+            <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('dnd')" id="btn-dnd-drawer">Toggle</button>
+          </div>
+        </div>
+
+        <div class="m3-card detail-drawer" id="drawer-sound">
+          <div class="mini-row">
+            <span>Haptics & System Sound</span>
+            <span class="settings-item-sub">Active</span>
+          </div>
+        </div>
+
+        <div class="m3-card detail-drawer" id="drawer-modes">
+          <div class="mini-row">
+            <span>Do Not Disturb</span>
+            <button class="m3-btn m3-btn-tonal" onclick="toggleFlag('dnd')">Toggle</button>
+          </div>
+        </div>
+
+        <div class="m3-card detail-drawer" id="drawer-display">
+          <div class="mini-row">
+            <div>
+              <strong id="d-mode-lbl">Theme Mode</strong>
+              <div class="settings-item-sub" id="d-mode-val">light</div>
+            </div>
+            <button class="m3-btn m3-btn-tonal" onclick="toggleMode()" id="btn-mode-toggle">Switch</button>
+          </div>
+          <div style="padding-top:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px;">
+              <span id="d-bright-lbl">Brightness</span>
+              <span id="d-bright-val">100%</span>
+            </div>
+            <input type="range" id="set-bright" min="45" max="100" style="width:100%;accent-color:var(--md-sys-color-primary);" oninput="changeBrightness(this.value)">
+          </div>
+        </div>
+
+        <div class="m3-card detail-drawer" id="drawer-style">
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="m3-chip" data-app="musik.html" onclick="toggleBlockedApp('musik.html')">Music</button>
-            <button class="m3-chip" data-app="galerie.html" onclick="toggleBlockedApp('galerie.html')">Gallery</button>
-            <button class="m3-chip" data-app="kamera.html" onclick="toggleBlockedApp('kamera.html')">Camera</button>
+            <button class="m3-chip" data-th="ocean" onclick="setTheme('ocean')">Ocean</button>
+            <button class="m3-chip" data-th="forest" onclick="setTheme('forest')">Forest</button>
+            <button class="m3-chip" data-th="violet" onclick="setTheme('violet')">Violet</button>
+            <button class="m3-chip" data-th="amber" onclick="setTheme('amber')">Amber</button>
+            <button class="m3-chip" data-th="rose" onclick="setTheme('rose')">Rose</button>
+            <button class="m3-chip" data-th="citrus" onclick="setTheme('citrus')">Citrus</button>
+            <button class="m3-chip" data-th="slate" onclick="setTheme('slate')">Slate</button>
+            <button class="m3-chip" data-th="mono" onclick="setTheme('mono')">Mono</button>
+            <button class="m3-chip" data-th="sunset" onclick="setTheme('sunset')">Sunset</button>
+            <button class="m3-chip" data-th="lagoon" onclick="setTheme('lagoon')">Lagoon</button>
+            <button class="m3-chip" data-th="berry" onclick="setTheme('berry')">Berry</button>
+            <button class="m3-chip" data-th="sandstone" onclick="setTheme('sandstone')">Sandstone</button>
           </div>
         </div>
-      </div>
 
-      <!-- System, Language, PIN, Backup & Power Drawer -->
-      <div class="m3-card detail-drawer" id="drawer-system">
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <div>
-            <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-lang-lbl">Language</label>
-            <select id="set-lang" class="m3-input" onchange="saveSystemPrefs()">
-              <option value="de">Deutsch</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="es">Español</option>
-              <option value="ja">日本語</option>
-            </select>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="m3-card detail-drawer" id="drawer-battery">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <div>
-              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-user-lbl">User</label>
-              <input type="text" id="set-user" class="m3-input" onchange="saveSystemPrefs()">
+              <strong id="bat-detail-title">Battery Status</strong>
+              <div class="settings-item-sub" id="bat-sync-source">Checking device battery API…</div>
             </div>
-            <div>
-              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-dev-lbl">Device</label>
-              <input type="text" id="set-device" class="m3-input" onchange="saveSystemPrefs()">
-            </div>
-          </div>
-
-          <div>
-            <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-pin-lbl">Lock PIN</label>
-            <div style="display:flex;gap:8px;">
-              <input type="password" id="set-pin" class="m3-input" inputmode="numeric" maxlength="8" placeholder="••••">
-              <button class="m3-btn m3-btn-tonal" onclick="saveSystemPrefs()" id="btn-save-pin">Save</button>
-            </div>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            <button class="m3-btn m3-btn-tonal" onclick="exportBackup()">
-              <span class="material-symbols-rounded" style="font-size:18px;">download</span>
-              <span id="btn-export">Export JSON</span>
+            <button class="m3-btn m3-btn-tonal" onclick="manualBatterySync()">
+              <span class="material-symbols-rounded" style="font-size:18px;">sync</span>
+              <span id="bat-sync-btn">Sync</span>
             </button>
-            <label class="m3-btn m3-btn-outlined" style="cursor:pointer;">
-              <span class="material-symbols-rounded" style="font-size:18px;">upload_file</span>
-              <span id="btn-import">Import JSON</span>
-              <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackup(event)">
-            </label>
-            <a href="oobe.html" class="m3-btn m3-btn-tonal" id="btn-oobe">OOBE</a>
-            <button class="m3-btn m3-btn-outlined" onclick="AndroidOS.factoryReset(true)" id="btn-reset">Reset</button>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--md-sys-color-outline-variant);">
-            <button class="m3-btn m3-btn-tonal" onclick="AndroidOS.rebootDevice(true)">
-              <span class="material-symbols-rounded" style="font-size:18px;">restart_alt</span>
-              <span id="btn-reboot">Restart</span>
-            </button>
-            <button class="m3-btn" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);" onclick="AndroidOS.powerOffDevice(true)">
-              <span class="material-symbols-rounded" style="font-size:18px;">power_settings_new</span>
-              <span id="btn-off">Power off</span>
-            </button>
-          </div>
-
-          <div id="sys-feedback" style="font-size:12px;font-weight:600;color:var(--md-sys-color-primary);"></div>
-        </div>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-google">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
-          <div>
-            <div style="font-weight:700;font-size:16px;" id="ga-disp-name">Guest User</div>
-            <div class="settings-item-sub" id="ga-disp-email">guest.user@example.com</div>
-          </div>
-          <span class="status-pill" id="ga-status-pill">Synced</span>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-          <input type="text" id="ga-name-input" class="m3-input" placeholder="Account Name">
-          <input type="email" id="ga-email-input" class="m3-input" placeholder="Email">
-        </div>
-
-        <div class="mini-row">
-          <span>Google Drive & Docs</span>
-          <button class="m3-chip" id="ga-sync-drive" onclick="toggleAccountSync('syncDrive')">Sync</button>
-        </div>
-        <div class="mini-row">
-          <span>Google Photos</span>
-          <button class="m3-chip" id="ga-sync-photos" onclick="toggleAccountSync('syncPhotos')">Sync</button>
-        </div>
-        <div class="mini-row">
-          <span>Contacts</span>
-          <button class="m3-chip" id="ga-sync-contacts" onclick="toggleAccountSync('syncContacts')">Sync</button>
-        </div>
-
-        <div style="margin-top:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;">
-            <span id="ga-storage-lbl">Account Storage</span>
-            <span id="ga-storage-val">18.4 GB / 100 GB</span>
           </div>
           <div class="meter-bar">
-            <div class="meter-fill" style="width:18.4%;"></div>
+            <div class="meter-fill" id="bat-meter-fill" style="width:94%;"></div>
+          </div>
+          <div id="bat-manual-controls" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+            <label class="settings-item-sub" id="bat-sim-lbl">Simulated level:</label>
+            <input type="range" min="5" max="100" id="bat-sim-range" style="accent-color:var(--md-sys-color-primary);" oninput="setSimulatedBattery(this.value)">
+            <button class="m3-chip" id="bat-chg-chip" onclick="toggleSimulatedCharging()">Charging</button>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-          <button class="m3-btn" onclick="saveGoogleAccount()" id="btn-save-ga">Save</button>
-        </div>
-      </div>
-
-      <!-- Family Link Replica Drawer -->
-      <div class="m3-card detail-drawer" id="drawer-family">
-        <div class="mini-row">
-          <div>
-            <strong id="fl-supervision-lbl">Parent Supervision</strong>
-            <div class="settings-item-sub" id="fl-parent-info">Parent: Alex Morgan</div>
-          </div>
-          <button class="m3-chip" id="fl-enabled-btn" onclick="toggleFamilyEnabled()">Enabled</button>
-        </div>
-
-        <div style="margin-top:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;">
-            <span id="fl-limit-lbl">Daily Screen Time Limit</span>
-            <span id="fl-limit-val">42 / 180 min</span>
-          </div>
-          <div class="meter-bar">
-            <div class="meter-fill" id="fl-limit-bar" style="width:23%;"></div>
-          </div>
-          <input type="range" min="30" max="480" step="15" id="fl-limit-range" style="width:100%;accent-color:var(--md-sys-color-primary);" oninput="updateFamilyLimit(this.value)">
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-          <div>
-            <label class="settings-item-sub" id="fl-bed-start-lbl">Bedtime start</label>
-            <input type="time" id="fl-bed-start" class="m3-input" onchange="updateFamilyBedtime()">
-          </div>
-          <div>
-            <label class="settings-item-sub" id="fl-bed-end-lbl">Bedtime end</label>
-            <input type="time" id="fl-bed-end" class="m3-input" onchange="updateFamilyBedtime()">
-          </div>
-        </div>
-
-        <div style="margin-top:12px;">
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;" id="fl-apps-lbl">App Limits</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="m3-chip" data-app="musik.html" onclick="toggleBlockedApp('musik.html')">Music</button>
-            <button class="m3-chip" data-app="galerie.html" onclick="toggleBlockedApp('galerie.html')">Gallery</button>
-            <button class="m3-chip" data-app="kamera.html" onclick="toggleBlockedApp('kamera.html')">Camera</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- System, Language, PIN, Backup & Power Drawer -->
-      <div class="m3-card detail-drawer" id="drawer-system">
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <div>
-            <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-lang-lbl">Language</label>
-            <select id="set-lang" class="m3-input" onchange="saveSystemPrefs()">
-              <option value="de">Deutsch</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="es">Español</option>
-              <option value="ja">日本語</option>
-            </select>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="m3-card detail-drawer" id="drawer-google">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
             <div>
-              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-user-lbl">User</label>
-              <input type="text" id="set-user" class="m3-input" onchange="saveSystemPrefs()">
+              <div style="font-weight:700;font-size:16px;" id="ga-disp-name">Guest User</div>
+              <div class="settings-item-sub" id="ga-disp-email">guest.user@example.com</div>
             </div>
-            <div>
-              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-dev-lbl">Device</label>
-              <input type="text" id="set-device" class="m3-input" onchange="saveSystemPrefs()">
+            <span class="status-pill" id="ga-status-pill">Synced</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <input type="text" id="ga-name-input" class="m3-input" placeholder="Account Name">
+            <input type="email" id="ga-email-input" class="m3-input" placeholder="Email">
+          </div>
+
+          <div class="mini-row">
+            <span>Google Drive & Docs</span>
+            <button class="m3-chip" id="ga-sync-drive" onclick="toggleAccountSync('syncDrive')">Sync</button>
+          </div>
+          <div class="mini-row">
+            <span>Google Photos</span>
+            <button class="m3-chip" id="ga-sync-photos" onclick="toggleAccountSync('syncPhotos')">Sync</button>
+          </div>
+          <div class="mini-row">
+            <span>Contacts</span>
+            <button class="m3-chip" id="ga-sync-contacts" onclick="toggleAccountSync('syncContacts')">Sync</button>
+          </div>
+
+          <div style="margin-top:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;">
+              <span id="ga-storage-lbl">Account Storage</span>
+              <span id="ga-storage-val">18.4 GB / 100 GB</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill" style="width:18.4%;"></div>
             </div>
           </div>
 
-          <div>
-            <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-pin-lbl">Lock PIN</label>
-            <div style="display:flex;gap:8px;">
-              <input type="password" id="set-pin" class="m3-input" inputmode="numeric" maxlength="8" placeholder="••••">
-              <button class="m3-btn m3-btn-tonal" onclick="saveSystemPrefs()" id="btn-save-pin">Save</button>
-            </div>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            <button class="m3-btn m3-btn-tonal" onclick="exportBackup()">
-              <span class="material-symbols-rounded" style="font-size:18px;">download</span>
-              <span id="btn-export">Export JSON</span>
-            </button>
-            <label class="m3-btn m3-btn-outlined" style="cursor:pointer;">
-              <span class="material-symbols-rounded" style="font-size:18px;">upload_file</span>
-              <span id="btn-import">Import JSON</span>
-              <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackup(event)">
-            </label>
-            <a href="oobe.html" class="m3-btn m3-btn-tonal" id="btn-oobe">OOBE</a>
-            <button class="m3-btn m3-btn-outlined" onclick="AndroidOS.factoryReset(true)" id="btn-reset">Reset</button>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--md-sys-color-outline-variant);">
-            <button class="m3-btn m3-btn-tonal" onclick="AndroidOS.rebootDevice(true)">
-              <span class="material-symbols-rounded" style="font-size:18px;">restart_alt</span>
-              <span id="btn-reboot">Restart</span>
-            </button>
-            <button class="m3-btn" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);" onclick="AndroidOS.powerOffDevice(true)">
-              <span class="material-symbols-rounded" style="font-size:18px;">power_settings_new</span>
-              <span id="btn-off">Power off</span>
-            </button>
-          </div>
-
-          <div id="sys-feedback" style="font-size:12px;font-weight:600;color:var(--md-sys-color-primary);"></div>
-        </div>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-family">
-        <div class="mini-row">
-          <div>
-            <strong id="fl-supervision-lbl">Parent Supervision</strong>
-            <div class="settings-item-sub" id="fl-parent-info">Parent: Alex Morgan</div>
-          </div>
-          <button class="m3-chip" id="fl-enabled-btn" onclick="toggleFamilyEnabled()">Enabled</button>
-        </div>
-
-        <div style="margin-top:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;">
-            <span id="fl-limit-lbl">Daily Screen Time Limit</span>
-            <span id="fl-limit-val">42 / 180 min</span>
-          </div>
-          <div class="meter-bar">
-            <div class="meter-fill" id="fl-limit-bar" style="width:23%;"></div>
-          </div>
-          <input type="range" min="30" max="480" step="15" id="fl-limit-range" style="width:100%;accent-color:var(--md-sys-color-primary);" oninput="updateFamilyLimit(this.value)">
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-          <div>
-            <label class="settings-item-sub" id="fl-bed-start-lbl">Bedtime start</label>
-            <input type="time" id="fl-bed-start" class="m3-input" onchange="updateFamilyBedtime()">
-          </div>
-          <div>
-            <label class="settings-item-sub" id="fl-bed-end-lbl">Bedtime end</label>
-            <input type="time" id="fl-bed-end" class="m3-input" onchange="updateFamilyBedtime()">
+          <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+            <button class="m3-btn" onclick="saveGoogleAccount()" id="btn-save-ga">Save</button>
           </div>
         </div>
 
-        <div style="margin-top:12px;">
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;" id="fl-apps-lbl">App Limits</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="m3-chip" data-app="musik.html" onclick="toggleBlockedApp('musik.html')">Music</button>
-            <button class="m3-chip" data-app="galerie.html" onclick="toggleBlockedApp('galerie.html')">Gallery</button>
-            <button class="m3-chip" data-app="kamera.html" onclick="toggleBlockedApp('kamera.html')">Camera</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- System, Language, PIN, Backup & Power Drawer -->
-      <div class="m3-card detail-drawer" id="drawer-system">
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <div>
-            <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-lang-lbl">Language</label>
-            <select id="set-lang" class="m3-input" onchange="saveSystemPrefs()">
-              <option value="de">Deutsch</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="es">Español</option>
-              <option value="ja">日本語</option>
-            </select>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="m3-card detail-drawer" id="drawer-family">
+          <div class="mini-row">
             <div>
-              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-user-lbl">User</label>
-              <input type="text" id="set-user" class="m3-input" onchange="saveSystemPrefs()">
+              <strong id="fl-supervision-lbl">Parent Supervision</strong>
+              <div class="settings-item-sub" id="fl-parent-info">Parent: Alex Morgan</div>
+            </div>
+            <button class="m3-chip" id="fl-enabled-btn" onclick="toggleFamilyEnabled()">Enabled</button>
+          </div>
+
+          <div style="margin-top:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;">
+              <span id="fl-limit-lbl">Daily Screen Time Limit</span>
+              <span id="fl-limit-val">42 / 180 min</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill" id="fl-limit-bar" style="width:23%;"></div>
+            </div>
+            <input type="range" min="30" max="480" step="15" id="fl-limit-range" style="width:100%;accent-color:var(--md-sys-color-primary);" oninput="updateFamilyLimit(this.value)">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+            <div>
+              <label class="settings-item-sub" id="fl-bed-start-lbl">Bedtime start</label>
+              <input type="time" id="fl-bed-start" class="m3-input" onchange="updateFamilyBedtime()">
             </div>
             <div>
-              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-dev-lbl">Device</label>
-              <input type="text" id="set-device" class="m3-input" onchange="saveSystemPrefs()">
+              <label class="settings-item-sub" id="fl-bed-end-lbl">Bedtime end</label>
+              <input type="time" id="fl-bed-end" class="m3-input" onchange="updateFamilyBedtime()">
             </div>
           </div>
 
-          <div>
-            <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-pin-lbl">Lock PIN</label>
-            <div style="display:flex;gap:8px;">
-              <input type="password" id="set-pin" class="m3-input" inputmode="numeric" maxlength="8" placeholder="••••">
-              <button class="m3-btn m3-btn-tonal" onclick="saveSystemPrefs()" id="btn-save-pin">Save</button>
+          <div style="margin-top:12px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px;" id="fl-apps-lbl">App Limits</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="m3-chip" data-app="musik.html" onclick="toggleBlockedApp('musik.html')">Music</button>
+              <button class="m3-chip" data-app="galerie.html" onclick="toggleBlockedApp('galerie.html')">Gallery</button>
+              <button class="m3-chip" data-app="kamera.html" onclick="toggleBlockedApp('kamera.html')">Camera</button>
             </div>
           </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            <button class="m3-btn m3-btn-tonal" onclick="exportBackup()">
-              <span class="material-symbols-rounded" style="font-size:18px;">download</span>
-              <span id="btn-export">Export JSON</span>
-            </button>
-            <label class="m3-btn m3-btn-outlined" style="cursor:pointer;">
-              <span class="material-symbols-rounded" style="font-size:18px;">upload_file</span>
-              <span id="btn-import">Import JSON</span>
-              <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackup(event)">
-            </label>
-            <a href="oobe.html" class="m3-btn m3-btn-tonal" id="btn-oobe">OOBE</a>
-            <button class="m3-btn m3-btn-outlined" onclick="AndroidOS.factoryReset(true)" id="btn-reset">Reset</button>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--md-sys-color-outline-variant);">
-            <button class="m3-btn m3-btn-tonal" onclick="AndroidOS.rebootDevice(true)">
-              <span class="material-symbols-rounded" style="font-size:18px;">restart_alt</span>
-              <span id="btn-reboot">Restart</span>
-            </button>
-            <button class="m3-btn" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);" onclick="AndroidOS.powerOffDevice(true)">
-              <span class="material-symbols-rounded" style="font-size:18px;">power_settings_new</span>
-              <span id="btn-off">Power off</span>
-            </button>
-          </div>
-
-          <div id="sys-feedback" style="font-size:12px;font-weight:600;color:var(--md-sys-color-primary);"></div>
         </div>
-      </div>
-      <div class="m3-card" class="m3-card detail-drawer" id="drawer-system">
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <div>
-            <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-lang-lbl">Language</label>
-            <select id="set-lang" class="m3-input" onchange="saveSystemPrefs()">
-              <option value="de">Deutsch</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="es">Español</option>
-              <option value="ja">日本語</option>
-            </select>
-          </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="m3-card detail-drawer" id="drawer-system">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div class="mini-row">
+              <div>
+                <strong id="sys-osk-lbl">Bildschirmtastatur (Gboard-OSK)</strong>
+                <div class="settings-item-sub" id="sys-osk-sub">Virtuelle Tastatur bei Fokus auf Textfeldern einblenden</div>
+              </div>
+              <button class="m3-chip" id="btn-osk-toggle" onclick="toggleOskSetting()">Off</button>
+            </div>
+
             <div>
-              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-user-lbl">User</label>
-              <input type="text" id="set-user" class="m3-input" onchange="saveSystemPrefs()">
+              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-lang-lbl">Language</label>
+              <select id="set-lang" class="m3-input" onchange="saveSystemPrefs()">
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="ja">日本語</option>
+              </select>
             </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-user-lbl">User</label>
+                <input type="text" id="set-user" class="m3-input" onchange="saveSystemPrefs()">
+              </div>
+              <div>
+                <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-dev-lbl">Device</label>
+                <input type="text" id="set-device" class="m3-input" onchange="saveSystemPrefs()">
+              </div>
+            </div>
+
             <div>
-              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-dev-lbl">Device</label>
-              <input type="text" id="set-device" class="m3-input" onchange="saveSystemPrefs()">
+              <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-pin-lbl">Lock PIN</label>
+              <div style="display:flex;gap:8px;">
+                <input type="password" id="set-pin" class="m3-input" inputmode="numeric" maxlength="8" placeholder="••••">
+                <button class="m3-btn m3-btn-tonal" onclick="saveSystemPrefs()" id="btn-save-pin">Save</button>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label class="settings-item-sub" style="display:block;margin-bottom:4px;" id="sys-pin-lbl">Lock PIN</label>
-            <div style="display:flex;gap:8px;">
-              <input type="password" id="set-pin" class="m3-input" inputmode="numeric" maxlength="8" placeholder="••••">
-              <button class="m3-btn m3-btn-tonal" onclick="saveSystemPrefs()" id="btn-save-pin">Save</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
+              <button class="m3-btn m3-btn-tonal" onclick="exportBackup()">
+                <span class="material-symbols-rounded" style="font-size:18px;">download</span>
+                <span id="btn-export">Export JSON</span>
+              </button>
+              <label class="m3-btn m3-btn-outlined" style="cursor:pointer;">
+                <span class="material-symbols-rounded" style="font-size:18px;">upload_file</span>
+                <span id="btn-import">Import JSON</span>
+                <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackup(event)">
+              </label>
+              <a href="oobe.html" class="m3-btn m3-btn-tonal" id="btn-oobe">OOBE</a>
+              <button class="m3-btn m3-btn-outlined" onclick="AndroidOS.factoryReset(true)" id="btn-reset">Reset</button>
             </div>
-          </div>
 
-          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            <button class="m3-btn m3-btn-tonal" onclick="exportBackup()">
-              <span class="material-symbols-rounded" style="font-size:18px;">download</span>
-              <span id="btn-export">Export JSON</span>
-            </button>
-            <label class="m3-btn m3-btn-outlined" style="cursor:pointer;">
-              <span class="material-symbols-rounded" style="font-size:18px;">upload_file</span>
-              <span id="btn-import">Import JSON</span>
-              <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackup(event)">
-            </label>
-            <a href="oobe.html" class="m3-btn m3-btn-tonal" id="btn-oobe">OOBE</a>
-            <button class="m3-btn m3-btn-outlined" onclick="AndroidOS.factoryReset(true)" id="btn-reset">Reset</button>
-          </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--md-sys-color-outline-variant);">
+              <button class="m3-btn m3-btn-tonal" onclick="AndroidOS.rebootDevice(true)">
+                <span class="material-symbols-rounded" style="font-size:18px;">restart_alt</span>
+                <span id="btn-reboot">Restart</span>
+              </button>
+              <button class="m3-btn" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);" onclick="AndroidOS.powerOffDevice(true)">
+                <span class="material-symbols-rounded" style="font-size:18px;">power_settings_new</span>
+                <span id="btn-off">Power off</span>
+              </button>
+            </div>
 
-          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--md-sys-color-outline-variant);">
-            <button class="m3-btn m3-btn-tonal" onclick="AndroidOS.rebootDevice(true)">
-              <span class="material-symbols-rounded" style="font-size:18px;">restart_alt</span>
-              <span id="btn-reboot">Restart</span>
-            </button>
-            <button class="m3-btn" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);" onclick="AndroidOS.powerOffDevice(true)">
-              <span class="material-symbols-rounded" style="font-size:18px;">power_settings_new</span>
-              <span id="btn-off">Power off</span>
-            </button>
+            <div id="sys-feedback" style="font-size:12px;font-weight:600;color:var(--md-sys-color-primary);"></div>
           </div>
-
-          <div id="sys-feedback" style="font-size:12px;font-weight:600;color:var(--md-sys-color-primary);"></div>
         </div>
-      </div>
       </div>
     </main>
 
@@ -1004,10 +600,9 @@
       const sourceEl = document.getElementById(drawerId);
       if (!overlay || !bodyEl || !sourceEl) return;
 
-      const labelEl = document.querySelector(`[onclick="toggleDrawer('${drawerId}')"] .settings-item-title`);
+      const labelEl = document.querySelector(`[onclick="openSettingsOverlay('${drawerId}')"] .settings-item-title`);
       titleEl.textContent = titleText || (labelEl ? labelEl.textContent.trim() : AndroidOS.t('settings'));
 
-      // Move live elements into overlay body so all IDs remain unique & interactive
       if (bodyEl.firstElementChild && bodyEl.firstElementChild !== sourceEl) {
         returnToHome(bodyEl.firstElementChild);
       }
@@ -1029,6 +624,7 @@
     }
 
     function closeSettingsOverlay() {
+      if (typeof AndroidOS.closeOsk === 'function') AndroidOS.closeOsk();
       const overlay = document.getElementById('settings-full-overlay');
       const bodyEl = document.getElementById('overlay-body');
       if (!overlay || !bodyEl) return;
@@ -1061,6 +657,7 @@
       const bat = AndroidOS.getBatteryInfo(st);
       const ga = st.googleAccount || {};
       const fl = st.familyLink || {};
+      const oskOn = Boolean(st.oskEnabled);
 
       document.getElementById('top-title').textContent = AndroidOS.t('settings', st);
       document.getElementById('settings-search').placeholder = AndroidOS.t('searchSettings', st);
@@ -1154,6 +751,12 @@
       });
 
       // System drawer
+      document.getElementById('sys-osk-lbl').textContent = AndroidOS.t('oskTitle', st);
+      document.getElementById('sys-osk-sub').textContent = AndroidOS.t('oskSub', st);
+      const oskBtn = document.getElementById('btn-osk-toggle');
+      oskBtn.textContent = oskOn ? cp.on : cp.off;
+      oskBtn.classList.toggle('active', oskOn);
+
       document.getElementById('sys-lang-lbl').textContent = cp.langLbl;
       document.getElementById('sys-user-lbl').textContent = cp.userLbl;
       document.getElementById('sys-dev-lbl').textContent = cp.devLbl;
@@ -1176,6 +779,12 @@
       if (document.activeElement !== document.getElementById('set-pin')) {
         document.getElementById('set-pin').value = st.lockPin || '';
       }
+    }
+
+    function toggleOskSetting() {
+      const cur = Boolean(AndroidOS.getState().oskEnabled);
+      AndroidOS.setOskEnabled(!cur);
+      renderAll();
     }
 
     function toggleFlag(key) {
@@ -1320,7 +929,6 @@
     }
 
     renderAll();
-  
   </script>
 </body>
 </html>
