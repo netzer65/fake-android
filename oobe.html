@@ -8,7 +8,7 @@
   <style>
     .oobe-wrap {
       flex: 1;
-      max-width: 700px;
+      max-width: 720px;
       width: 100%;
       margin: 0 auto;
       padding: 16px 22px 48px;
@@ -19,8 +19,8 @@
     }
     .stepper {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 5px;
       margin-bottom: 18px;
     }
     .step-seg {
@@ -44,7 +44,7 @@
       margin-bottom: 14px;
     }
     .oobe-title {
-      font-size: clamp(26px, 5vw, 34px);
+      font-size: clamp(25px, 4.8vw, 33px);
       font-weight: 700;
       letter-spacing: -0.02em;
       margin-bottom: 8px;
@@ -57,12 +57,12 @@
     }
     .option-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
       gap: 10px;
-      margin-top: 12px;
+      margin-top: 10px;
     }
     .option-card {
-      padding: 14px 16px;
+      padding: 13px 14px;
       border-radius: 18px;
       border: 2px solid var(--md-sys-color-outline-variant);
       background: var(--md-sys-color-surface-container-low);
@@ -112,6 +112,48 @@
       background: var(--md-sys-color-surface-container);
       border: 1px dashed var(--md-sys-color-outline);
     }
+    .welcome-hero {
+      text-align: center;
+      padding: 28px 18px;
+    }
+    .welcome-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    .processing-spinner {
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      border: 5px solid var(--md-sys-color-surface-container-highest);
+      border-top-color: var(--md-sys-color-primary);
+      animation: oobeSpin 0.9s linear infinite;
+      margin: 8px auto 18px;
+    }
+    @keyframes oobeSpin {
+      to { transform: rotate(360deg); }
+    }
+    .progress-track {
+      height: 10px;
+      border-radius: 999px;
+      background: var(--md-sys-color-surface-container-highest);
+      overflow: hidden;
+      margin: 16px 0 10px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--md-sys-color-primary);
+      transition: width 0.28s ease;
+    }
   </style>
 </head>
 <body>
@@ -120,23 +162,62 @@
 
     <main class="oobe-wrap">
       <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--md-sys-color-on-surface-variant);">
-          <span id="step-counter">STEP 1 / 5</span>
-          <span id="oobe-badge">OUT-OF-BOX SETUP</span>
-        </div>
-        <div class="stepper" id="stepper"></div>
-
-        <!-- Step 1: Language, Profile & Backup Import -->
-        <section class="m3-card step-panel" data-step="0">
-          <div class="oobe-hero-icon">
-            <span class="material-symbols-rounded filled" style="font-size:32px;">waving_hand</span>
+        <div id="oobe-progress-header" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--md-sys-color-on-surface-variant);">
+            <span id="step-counter">SCHRITT 1 / 9</span>
+            <span id="oobe-badge">OUT-OF-BOX SETUP</span>
           </div>
-          <h1 class="oobe-title" id="t-s1-title">Welcome to Android</h1>
-          <p class="oobe-sub" id="t-s1-sub">Configure your language, profile, and preferences — or import an existing backup JSON.</p>
+          <div class="stepper" id="stepper"></div>
+        </div>
 
-          <div style="display:flex;flex-direction:column;gap:12px;">
+        <!-- Screen 0: Willkommensscreen -->
+        <section class="m3-card step-panel welcome-hero" data-step="0">
+          <div class="welcome-badge">
+            <span class="material-symbols-rounded filled" style="font-size:16px;">auto_awesome</span>
+            <span>Android 16 · Pixel Experience</span>
+          </div>
+          <div class="oobe-hero-icon" style="width:78px;height:78px;border-radius:28px;margin:0 auto 18px;">
+            <span class="material-symbols-rounded filled" style="font-size:40px;">waving_hand</span>
+          </div>
+          <h1 class="oobe-title" id="t-w-title" style="font-size:clamp(30px,6vw,40px);">Willkommen</h1>
+          <p class="oobe-sub" id="t-w-sub" style="max-width:480px;margin:0 auto 24px;">
+            Richte dein Gerät in wenigen Schritten ein – inklusive Bildschirmtastatur, Design, Konto und Schnellstart.
+          </p>
+
+          <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+            <button type="button" class="m3-btn" style="padding:14px 28px;font-size:15px;" onclick="nextStep()">
+              <span id="t-w-start">Einrichtung starten</span>
+              <span class="material-symbols-rounded" style="font-size:20px;">arrow_forward</span>
+            </button>
+          </div>
+
+          <div class="import-box" style="text-align:left;margin-top:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+              <div>
+                <div style="font-weight:700;font-size:14px;" id="lbl-import-title">Backup importieren (JSON)</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="lbl-import-desc">Stelle einen zuvor exportierten Systemzustand sofort wieder her.</div>
+              </div>
+              <label class="m3-btn m3-btn-tonal" style="cursor:pointer;">
+                <span class="material-symbols-rounded" style="font-size:18px;">upload_file</span>
+                <span id="lbl-import-btn">JSON wählen</span>
+                <input type="file" id="oobe-import-file" accept=".json,application/json" style="display:none;" onchange="handleImportFile(event)">
+              </label>
+            </div>
+            <div id="import-feedback" style="font-size:12px;margin-top:8px;color:var(--md-sys-color-primary);font-weight:600;"></div>
+          </div>
+        </section>
+
+        <!-- Step 1: Sprache und Region -->
+        <section class="m3-card step-panel" data-step="1" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">language</span>
+          </div>
+          <h1 class="oobe-title" id="t-s1-title">1. Sprache und Region</h1>
+          <p class="oobe-sub" id="t-s1-sub">Wähle deine bevorzugte Systemsprache und Region für Datum, Uhrzeit und Formate.</p>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
             <div>
-              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-lang">LANGUAGE</label>
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-lang">SPRACHE</label>
               <select id="oobe-lang" class="m3-input" onchange="onLanguageChange()">
                 <option value="de">Deutsch</option>
                 <option value="en">English</option>
@@ -146,48 +227,55 @@
               </select>
             </div>
             <div>
-              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-user">USER NAME</label>
-              <input type="text" id="oobe-username" class="m3-input" placeholder="Guest">
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-region">REGION</label>
+              <select id="oobe-region" class="m3-input" onchange="saveStepInputs()">
+                <option value="DE">Deutschland (DE)</option>
+                <option value="AT">Österreich (AT)</option>
+                <option value="CH">Schweiz (CH)</option>
+                <option value="LU">Lukoland (LU)</option>
+                <option value="US">United States (US)</option>
+                <option value="GB">United Kingdom (GB)</option>
+                <option value="FR">France (FR)</option>
+                <option value="ES">España (ES)</option>
+                <option value="JP">日本 (JP)</option>
+              </select>
             </div>
-            <div>
-              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-device">DEVICE NAME</label>
-              <input type="text" id="oobe-devicename" class="m3-input" placeholder="Pixel 10">
-            </div>
-          </div>
-
-          <div class="import-box">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-              <div>
-                <div style="font-weight:700;font-size:14px;" id="lbl-import-title">Import Backup (JSON)</div>
-                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="lbl-import-desc">Restore a previously exported system state file.</div>
-              </div>
-              <label class="m3-btn m3-btn-tonal" style="cursor:pointer;">
-                <span class="material-symbols-rounded" style="font-size:18px;">upload_file</span>
-                <span id="lbl-import-btn">Choose JSON</span>
-                <input type="file" id="oobe-import-file" accept=".json,application/json" style="display:none;" onchange="handleImportFile(event)">
-              </label>
-            </div>
-            <div id="import-feedback" style="font-size:12px;margin-top:8px;color:var(--md-sys-color-primary);font-weight:600;"></div>
           </div>
         </section>
 
-        <!-- Step 2: Connectivity & Optional Lock PIN -->
-        <section class="m3-card step-panel" data-step="1" style="display:none;">
+        <!-- Step 2: WLAN und Mobile -->
+        <section class="m3-card step-panel" data-step="2" style="display:none;">
           <div class="oobe-hero-icon">
-            <span class="material-symbols-rounded filled" style="font-size:32px;">shield</span>
+            <span class="material-symbols-rounded filled" style="font-size:32px;">wifi</span>
           </div>
-          <h1 class="oobe-title" id="t-s2-title">Connections & Lock</h1>
-          <p class="oobe-sub" id="t-s2-sub">Choose default radios and set an optional lockscreen PIN (leave empty for swipe unlock).</p>
+          <h1 class="oobe-title" id="t-s2-title">2. WLAN und Mobile</h1>
+          <p class="oobe-sub" id="t-s2-sub">Verbinde dich mit einem WLAN-Netzwerk und aktiviere bei Bedarf mobile Daten.</p>
 
           <div class="toggle-row">
             <div style="display:flex;align-items:center;gap:12px;">
               <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">wifi</span>
               <div>
-                <div style="font-weight:700;" id="lbl-wifi-row">Wi-Fi</div>
-                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Wireless networking</div>
+                <div style="font-weight:700;" id="lbl-wifi-row">WLAN</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="lbl-wifi-net-sub">Drahtloses Netzwerk</div>
               </div>
             </div>
-            <button class="m3-chip" id="btn-wifi" onclick="toggleOobeFlag('wifi')"></button>
+            <button type="button" class="m3-chip" id="btn-wifi" onclick="toggleOobeFlag('wifi')"></button>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-wifi-ssid">WLAN-NETZWERKNAME (SSID)</label>
+            <input type="text" id="oobe-wifi-ssid" class="m3-input" placeholder="Pixel-Home-5G">
+          </div>
+
+          <div class="toggle-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">signal_cellular_alt</span>
+              <div>
+                <div style="font-weight:700;" id="lbl-mobile-row">Mobile Daten (5G)</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Mobilfunkverbindung nutzen</div>
+              </div>
+            </div>
+            <button type="button" class="m3-chip" id="btn-mobile" onclick="toggleOobeFlag('mobileData')"></button>
           </div>
 
           <div class="toggle-row">
@@ -195,103 +283,242 @@
               <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">bluetooth</span>
               <div>
                 <div style="font-weight:700;">Bluetooth</div>
-                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Accessories & audio</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Zubehör & Audio koppeln</div>
               </div>
             </div>
-            <button class="m3-chip" id="btn-bt" onclick="toggleOobeFlag('bluetooth')"></button>
+            <button type="button" class="m3-chip" id="btn-bt" onclick="toggleOobeFlag('bluetooth')"></button>
+          </div>
+        </section>
+
+        <!-- Step 3: Geräte- und Benutzername -->
+        <section class="m3-card step-panel" data-step="3" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">badge</span>
+          </div>
+          <h1 class="oobe-title" id="t-s3-title">3. Geräte- und Benutzername</h1>
+          <p class="oobe-sub" id="t-s3-sub">Lege deinen persönlichen Anzeigenamen und den Namen dieses Geräts fest.</p>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-user">BENUTZERNAME</label>
+              <input type="text" id="oobe-username" class="m3-input" placeholder="Lukas">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-device">GERÄTENAME</label>
+              <input type="text" id="oobe-devicename" class="m3-input" placeholder="Pixel 10">
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 4: On Screen Keyboard -->
+        <section class="m3-card step-panel" data-step="4" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">keyboard</span>
+          </div>
+          <h1 class="oobe-title" id="t-s4-title">4. On Screen Keyboard</h1>
+          <p class="oobe-sub" id="t-s4-sub">Aktiviere die integrierte Gboard-Bildschirmtastatur und wähle dein Tastenlayout.</p>
+
+          <div class="toggle-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">keyboard</span>
+              <div>
+                <div style="font-weight:700;" id="lbl-osk-row">Bildschirmtastatur (Gboard OSK)</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);" id="lbl-osk-sub">Bei Fokus auf Eingabefeldern automatisch einblenden</div>
+              </div>
+            </div>
+            <button type="button" class="m3-chip" id="btn-oobe-osk" onclick="toggleOobeOsk()"></button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label style="font-size:12px;font-weight:700;display:block;margin-bottom:8px;" id="lbl-osk-layout">TASTATURLAYOUT</label>
+            <div class="option-grid" style="grid-template-columns:repeat(3, 1fr);">
+              <button type="button" class="option-card" data-layout="qwertz" onclick="pickOskLayout('qwertz')">
+                <div style="font-weight:700;">QWERTZ</div>
+                <div style="font-size:11px;opacity:0.75;">Deutsch (ä, ö, ü, ß)</div>
+              </button>
+              <button type="button" class="option-card" data-layout="qwerty" onclick="pickOskLayout('qwerty')">
+                <div style="font-weight:700;">QWERTY</div>
+                <div style="font-size:11px;opacity:0.75;">International</div>
+              </button>
+              <button type="button" class="option-card" data-layout="azerty" onclick="pickOskLayout('azerty')">
+                <div style="font-weight:700;">AZERTY</div>
+                <div style="font-size:11px;opacity:0.75;">Français</div>
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-osk-test">TASTATUR DIREKT TESTEN</label>
+            <input type="text" id="oobe-osk-test" class="m3-input" placeholder="Hier tippen, um Gboard zu testen…">
+          </div>
+        </section>
+
+        <!-- Step 5: Google Konto -->
+        <section class="m3-card step-panel" data-step="5" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">account_circle</span>
+          </div>
+          <h1 class="oobe-title" id="t-s5-title">5. Google-Konto</h1>
+          <p class="oobe-sub" id="t-s5-sub">Verknüpfe dein Google-Konto für Drive, Fotos und Kontakte – oder fahre ohne Anmeldung fort.</p>
+
+          <div class="toggle-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">cloud_sync</span>
+              <div>
+                <div style="font-weight:700;" id="lbl-ga-active">Konto-Synchronisierung</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Drive, Fotos & Kontakte synchron halten</div>
+              </div>
+            </div>
+            <button type="button" class="m3-chip" id="btn-ga-signedin" onclick="toggleOobeGoogleSignedIn()"></button>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px;">
+            <div>
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-ga-name">KONTONAME</label>
+              <input type="text" id="oobe-ga-name" class="m3-input" placeholder="Lukas">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-ga-email">E-MAIL-ADRESSE</label>
+              <input type="email" id="oobe-ga-email" class="m3-input" placeholder="lukas@example.com">
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 6: Bildschirmsperre -->
+        <section class="m3-card step-panel" data-step="6" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">lock</span>
+          </div>
+          <h1 class="oobe-title" id="t-s6-title">6. Bildschirmsperre</h1>
+          <p class="oobe-sub" id="t-s6-sub">Schütze dein Gerät mit einer 4- bis 8-stelligen PIN (leer lassen zum Entsperren per Wischen).</p>
+
+          <div>
+            <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-pin">SPERR-PIN (4–8 ZIFFERN, OPTIONAL)</label>
+            <input type="password" id="oobe-pin" class="m3-input" inputmode="numeric" maxlength="8" placeholder="••••">
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+            <button type="button" class="m3-chip" onclick="document.getElementById('oobe-pin').value=''; saveStepInputs();">Ohne PIN</button>
+            <button type="button" class="m3-chip" onclick="document.getElementById('oobe-pin').value='1234'; saveStepInputs();">Beispiel: 1234</button>
+          </div>
+        </section>
+
+        <!-- Step 7: Design und Helligkeit (mit Bitte nicht stören, Lautstärke und Lautlos) -->
+        <section class="m3-card step-panel" data-step="7" style="display:none;">
+          <div class="oobe-hero-icon">
+            <span class="material-symbols-rounded filled" style="font-size:32px;">palette</span>
+          </div>
+          <h1 class="oobe-title" id="t-s7-title">7. Design und Helligkeit</h1>
+          <p class="oobe-sub" id="t-s7-sub">Passe Farbschema, Hell-/Dunkelmodus, Bildschirmhelligkeit sowie Ton & Nicht stören an.</p>
+
+          <div class="option-grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+            <button type="button" class="option-card" id="mode-light-card" onclick="pickMode('light')">
+              <span class="material-symbols-rounded filled" style="margin-bottom:6px;">light_mode</span>
+              <div style="font-weight:700;" id="lbl-light">Hell</div>
+            </button>
+            <button type="button" class="option-card" id="mode-dark-card" onclick="pickMode('dark')">
+              <span class="material-symbols-rounded filled" style="margin-bottom:6px;">dark_mode</span>
+              <div style="font-weight:700;" id="lbl-dark">Dunkel</div>
+            </button>
+          </div>
+
+          <div class="option-grid" id="oobe-themes" style="margin-bottom:16px;">
+            <button type="button" class="option-card" data-val="ocean" onclick="pickTheme('ocean')">
+              <div style="width:20px;height:20px;border-radius:999px;background:#0061A4;margin-bottom:6px;"></div>
+              <div style="font-weight:700;">Ocean</div>
+            </button>
+            <button type="button" class="option-card" data-val="forest" onclick="pickTheme('forest')">
+              <div style="width:20px;height:20px;border-radius:999px;background:#2D6A4F;margin-bottom:6px;"></div>
+              <div style="font-weight:700;">Forest</div>
+            </button>
+            <button type="button" class="option-card" data-val="violet" onclick="pickTheme('violet')">
+              <div style="width:20px;height:20px;border-radius:999px;background:#6750A4;margin-bottom:6px;"></div>
+              <div style="font-weight:700;">Violet</div>
+            </button>
+            <button type="button" class="option-card" data-val="amber" onclick="pickTheme('amber')">
+              <div style="width:20px;height:20px;border-radius:999px;background:#8B5000;margin-bottom:6px;"></div>
+              <div style="font-weight:700;">Amber</div>
+            </button>
+            <button type="button" class="option-card" data-val="lagoon" onclick="pickTheme('lagoon')">
+              <div style="width:20px;height:20px;border-radius:999px;background:#006A66;margin-bottom:6px;"></div>
+              <div style="font-weight:700;">Lagoon</div>
+            </button>
+            <button type="button" class="option-card" data-val="rose" onclick="pickTheme('rose')">
+              <div style="width:20px;height:20px;border-radius:999px;background:#9C2F5C;margin-bottom:6px;"></div>
+              <div style="font-weight:700;">Rose</div>
+            </button>
+          </div>
+
+          <div class="m3-card-filled" style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-weight:700;font-size:14px;" id="lbl-bright">Helligkeit</span>
+              <span id="oobe-bright-val" style="font-weight:700;font-size:14px;">100 %</span>
+            </div>
+            <input type="range" id="oobe-bright" min="45" max="100" style="width:100%;accent-color:var(--md-sys-color-primary);">
+          </div>
+
+          <div class="m3-card-filled" style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-weight:700;font-size:14px;" id="lbl-volume">Systemlautstärke</span>
+              <span id="oobe-vol-val" style="font-weight:700;font-size:14px;">75 %</span>
+            </div>
+            <input type="range" id="oobe-vol" min="0" max="100" style="width:100%;accent-color:var(--md-sys-color-primary);">
+          </div>
+
+          <div class="toggle-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">volume_off</span>
+              <div>
+                <div style="font-weight:700;" id="lbl-silent-row">Lautlos</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Alle Systemtöne stummschalten</div>
+              </div>
+            </div>
+            <button type="button" class="m3-chip" id="btn-silent" onclick="toggleOobeSilent()"></button>
           </div>
 
           <div class="toggle-row">
             <div style="display:flex;align-items:center;gap:12px;">
               <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">do_not_disturb_on</span>
               <div>
-                <div style="font-weight:700;" id="lbl-dnd-row">Do Not Disturb</div>
-                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Quiet mode</div>
+                <div style="font-weight:700;" id="lbl-dnd-row">Bitte nicht stören</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Benachrichtigungen unterdrücken</div>
               </div>
             </div>
-            <button class="m3-chip" id="btn-dnd" onclick="toggleOobeFlag('dnd')"></button>
-          </div>
-
-          <div style="margin-top:12px;">
-            <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;" id="lbl-pin">OPTIONAL LOCK PIN (4–8 DIGITS)</label>
-            <input type="password" id="oobe-pin" class="m3-input" inputmode="numeric" maxlength="8" placeholder="••••">
+            <button type="button" class="m3-chip" id="btn-dnd" onclick="toggleOobeFlag('dnd')"></button>
           </div>
         </section>
 
-        <!-- Step 3: Material You Theme -->
-        <section class="m3-card step-panel" data-step="2" style="display:none;">
+        <!-- Step 8: Zusammenfassung -->
+        <section class="m3-card step-panel" data-step="8" style="display:none;">
           <div class="oobe-hero-icon">
-            <span class="material-symbols-rounded filled" style="font-size:32px;">palette</span>
+            <span class="material-symbols-rounded filled" style="font-size:32px;">fact_check</span>
           </div>
-          <h1 class="oobe-title" id="t-s3-title">Material You Theme</h1>
-          <p class="oobe-sub" id="t-s3-sub">Pick an accent palette for buttons, chips, and containers.</p>
-
-          <div class="option-grid" id="oobe-themes">
-            <button class="option-card" data-val="ocean" onclick="pickTheme('ocean')">
-              <div style="width:24px;height:24px;border-radius:999px;background:#0061A4;margin-bottom:8px;"></div>
-              <div style="font-weight:700;">Ocean</div>
-            </button>
-            <button class="option-card" data-val="forest" onclick="pickTheme('forest')">
-              <div style="width:24px;height:24px;border-radius:999px;background:#2D6A4F;margin-bottom:8px;"></div>
-              <div style="font-weight:700;">Forest</div>
-            </button>
-            <button class="option-card" data-val="violet" onclick="pickTheme('violet')">
-              <div style="width:24px;height:24px;border-radius:999px;background:#6750A4;margin-bottom:8px;"></div>
-              <div style="font-weight:700;">Violet</div>
-            </button>
-            <button class="option-card" data-val="amber" onclick="pickTheme('amber')">
-              <div style="width:24px;height:24px;border-radius:999px;background:#8B5000;margin-bottom:8px;"></div>
-              <div style="font-weight:700;">Amber</div>
-            </button>
-          </div>
-        </section>
-
-        <!-- Step 4: Display & Mode -->
-        <section class="m3-card step-panel" data-step="3" style="display:none;">
-          <div class="oobe-hero-icon">
-            <span class="material-symbols-rounded filled" style="font-size:32px;">contrast</span>
-          </div>
-          <h1 class="oobe-title" id="t-s4-title">Display & Mode</h1>
-          <p class="oobe-sub" id="t-s4-sub">Choose light or dark mode and default brightness.</p>
-
-          <div class="option-grid" style="grid-template-columns:1fr 1fr;margin-bottom:18px;">
-            <button class="option-card" id="mode-light-card" onclick="pickMode('light')">
-              <span class="material-symbols-rounded filled" style="margin-bottom:8px;">light_mode</span>
-              <div style="font-weight:700;" id="lbl-light">Light</div>
-            </button>
-            <button class="option-card" id="mode-dark-card" onclick="pickMode('dark')">
-              <span class="material-symbols-rounded filled" style="margin-bottom:8px;">dark_mode</span>
-              <div style="font-weight:700;" id="lbl-dark">Dark</div>
-            </button>
-          </div>
-
-          <div class="m3-card-filled">
-            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-              <span style="font-weight:700;font-size:14px;" id="lbl-bright">Brightness</span>
-              <span id="oobe-bright-val" style="font-weight:700;font-size:14px;">100 %</span>
-            </div>
-            <input type="range" id="oobe-bright" min="45" max="100" style="width:100%;accent-color:var(--md-sys-color-primary);">
-          </div>
-        </section>
-
-        <!-- Step 5: Summary -->
-        <section class="m3-card step-panel" data-step="4" style="display:none;">
-          <div class="oobe-hero-icon">
-            <span class="material-symbols-rounded filled" style="font-size:32px;">check_circle</span>
-          </div>
-          <h1 class="oobe-title" id="t-s5-title">Ready to go</h1>
-          <p class="oobe-sub" id="t-s5-sub">Your initial configuration will be saved locally in this browser.</p>
+          <h1 class="oobe-title" id="t-s8-title">8. Zusammenfassung</h1>
+          <p class="oobe-sub" id="t-s8-sub">Überprüfe deine Auswahl, bevor dein System eingerichtet wird.</p>
           <div class="summary-box" id="oobe-summary"></div>
+        </section>
+
+        <!-- Step 9: ...wird verarbeitet... -->
+        <section class="m3-card step-panel" data-step="9" style="display:none;text-align:center;padding:30px 20px;">
+          <div class="processing-spinner"></div>
+          <h1 class="oobe-title" id="t-s9-title">…wird verarbeitet…</h1>
+          <p class="oobe-sub" id="t-s9-sub">Systemeinstellungen, Tastatur, Design und Konto werden vorbereitet.</p>
+          <div class="progress-track">
+            <div class="progress-fill" id="oobe-proc-bar"></div>
+          </div>
+          <div id="oobe-proc-status" style="font-size:13px;font-weight:600;color:var(--md-sys-color-primary);">
+            Konfiguration wird angewendet…
+          </div>
         </section>
       </div>
 
-      <div class="oobe-footer">
-        <button class="m3-btn m3-btn-outlined" id="prev-btn" onclick="prevStep()">
+      <div class="oobe-footer" id="oobe-footer">
+        <button type="button" class="m3-btn m3-btn-outlined" id="prev-btn" onclick="prevStep()">
           <span class="material-symbols-rounded" style="font-size:18px;">arrow_back</span>
-          <span id="lbl-prev">Back</span>
+          <span id="lbl-prev">Zurück</span>
         </button>
-        <button class="m3-btn" id="next-btn" onclick="nextStep()">
-          <span id="next-label">Next</span>
+        <button type="button" class="m3-btn" id="next-btn" onclick="nextStep()">
+          <span id="next-label">Weiter</span>
           <span class="material-symbols-rounded" id="next-icon" style="font-size:18px;">arrow_forward</span>
         </button>
       </div>
@@ -305,94 +532,163 @@
     const OOBE_TEXT = {
       de: {
         step: (c, t) => `SCHRITT ${c} VON ${t}`,
-        s1Title: 'Willkommen bei Android',
-        s1Sub: 'Wähle Sprache, Profil und Design – oder importiere ein vorhandenes Backup (JSON).',
-        lang: 'SPRACHE',
-        user: 'NUTZERNAME',
-        device: 'GERÄTENAME',
+        wTitle: 'Willkommen',
+        wSub: 'Richte dein Gerät in wenigen Schritten ein – inklusive Bildschirmtastatur, Design, Konto und Schnellstart.',
+        wStart: 'Einrichtung starten',
         importTitle: 'Backup importieren (JSON)',
-        importDesc: 'Stelle einen zuvor exportierten Systemzustand wieder her.',
+        importDesc: 'Stelle einen zuvor exportierten Systemzustand sofort wieder her.',
         importBtn: 'JSON wählen',
         importOk: 'Backup importiert! Weiter zum Sperrbildschirm…',
         importErr: 'Ungültige JSON-Backup-Datei.',
-        s2Title: 'Verbindungen & Sperre',
-        s2Sub: 'Lege Funkmodule und optional eine Sperr-PIN fest (leer = ohne PIN entsperren).',
+        s1Title: '1. Sprache und Region',
+        s1Sub: 'Wähle deine bevorzugte Systemsprache und Region für Datum, Uhrzeit und Formate.',
+        lang: 'SPRACHE',
+        region: 'REGION',
+        s2Title: '2. WLAN und Mobile',
+        s2Sub: 'Verbinde dich mit einem WLAN-Netzwerk und aktiviere bei Bedarf mobile Daten.',
         wifiRow: 'WLAN',
-        dndRow: 'Nicht stören',
-        pin: 'OPTIONALE SPERR-PIN (4–8 ZIFFERN)',
-        s3Title: 'Material-You-Farbpalette',
-        s3Sub: 'Wähle eine Akzentfarbe für Buttons, Chips und Flächen.',
-        s4Title: 'Display & Modus',
-        s4Sub: 'Wähle helles oder dunkles Design sowie die Standardhelligkeit.',
+        wifiSsid: 'WLAN-NETZWERKNAME (SSID)',
+        mobileRow: 'Mobile Daten (5G)',
+        s3Title: '3. Geräte- und Benutzername',
+        s3Sub: 'Lege deinen persönlichen Anzeigenamen und den Namen dieses Geräts fest.',
+        user: 'BENUTZERNAME',
+        device: 'GERÄTENAME',
+        s4Title: '4. On Screen Keyboard',
+        s4Sub: 'Aktiviere die integrierte Gboard-Bildschirmtastatur und wähle dein Tastenlayout.',
+        oskRow: 'Bildschirmtastatur (Gboard OSK)',
+        oskSub: 'Bei Fokus auf Eingabefeldern automatisch einblenden',
+        oskLayout: 'TASTATURLAYOUT',
+        oskTest: 'TASTATUR DIREKT TESTEN',
+        s5Title: '5. Google-Konto',
+        s5Sub: 'Verknüpfe dein Google-Konto für Drive, Fotos und Kontakte – oder fahre ohne Anmeldung fort.',
+        gaActive: 'Konto-Synchronisierung',
+        gaName: 'KONTONAME',
+        gaEmail: 'E-MAIL-ADRESSE',
+        s6Title: '6. Bildschirmsperre',
+        s6Sub: 'Schütze dein Gerät mit einer 4- bis 8-stelligen PIN (leer lassen zum Entsperren per Wischen).',
+        pin: 'SPERR-PIN (4–8 ZIFFERN, OPTIONAL)',
+        s7Title: '7. Design und Helligkeit',
+        s7Sub: 'Passe Farbschema, Hell-/Dunkelmodus, Bildschirmhelligkeit sowie Ton & Bitte nicht stören an.',
         light: 'Hell',
         dark: 'Dunkel',
         bright: 'Helligkeit',
-        s5Title: 'Einrichtung abschließen',
-        s5Sub: 'Alle Einstellungen werden lokal im Browser gespeichert.',
+        volume: 'Systemlautstärke',
+        silentRow: 'Lautlos',
+        dndRow: 'Bitte nicht stören',
+        s8Title: '8. Zusammenfassung',
+        s8Sub: 'Überprüfe deine Auswahl, bevor dein System eingerichtet wird.',
+        s9Title: '…wird verarbeitet…',
+        s9Sub: 'Systemeinstellungen, Tastatur, Design und Konto werden vorbereitet.',
         prev: 'Zurück',
         next: 'Weiter',
-        finish: 'Fertigstellen',
+        finish: 'Jetzt einrichten',
         on: 'An',
         off: 'Aus'
       },
       en: {
         step: (c, t) => `STEP ${c} OF ${t}`,
-        s1Title: 'Welcome to Android',
-        s1Sub: 'Configure your language, profile, and look — or import an existing backup JSON.',
-        lang: 'LANGUAGE',
-        user: 'USER NAME',
-        device: 'DEVICE NAME',
+        wTitle: 'Welcome',
+        wSub: 'Set up your device in a few steps — including on-screen keyboard, design, account, and lock screen.',
+        wStart: 'Start setup',
         importTitle: 'Import Backup (JSON)',
-        importDesc: 'Restore a previously exported system state file.',
+        importDesc: 'Restore a previously exported system state file immediately.',
         importBtn: 'Choose JSON',
         importOk: 'Backup imported! Redirecting to lock screen…',
         importErr: 'Invalid JSON backup file.',
-        s2Title: 'Connections & Lock',
-        s2Sub: 'Choose radios and an optional lock PIN (empty = swipe/tap unlock).',
+        s1Title: '1. Language and Region',
+        s1Sub: 'Choose your preferred system language and region for date, time, and formats.',
+        lang: 'LANGUAGE',
+        region: 'REGION',
+        s2Title: '2. Wi-Fi and Mobile',
+        s2Sub: 'Connect to a Wi-Fi network and enable mobile data if needed.',
         wifiRow: 'Wi-Fi',
-        dndRow: 'Do Not Disturb',
-        pin: 'OPTIONAL LOCK PIN (4–8 DIGITS)',
-        s3Title: 'Material You Palette',
-        s3Sub: 'Select an accent color for buttons, chips, and containers.',
-        s4Title: 'Display & Mode',
-        s4Sub: 'Choose light or dark mode and default brightness.',
+        wifiSsid: 'WI-FI NETWORK NAME (SSID)',
+        mobileRow: 'Mobile Data (5G)',
+        s3Title: '3. Device and User Name',
+        s3Sub: 'Set your personal display name and the name of this device.',
+        user: 'USER NAME',
+        device: 'DEVICE NAME',
+        s4Title: '4. On Screen Keyboard',
+        s4Sub: 'Enable the built-in Gboard on-screen keyboard and select your layout.',
+        oskRow: 'On-screen keyboard (Gboard OSK)',
+        oskSub: 'Show automatically when focusing text inputs',
+        oskLayout: 'KEYBOARD LAYOUT',
+        oskTest: 'TEST KEYBOARD HERE',
+        s5Title: '5. Google Account',
+        s5Sub: 'Link your Google Account for Drive, Photos, and Contacts — or continue without signing in.',
+        gaActive: 'Account Sync',
+        gaName: 'ACCOUNT NAME',
+        gaEmail: 'EMAIL ADDRESS',
+        s6Title: '6. Screen Lock',
+        s6Sub: 'Protect your device with a 4–8 digit PIN (leave blank for swipe unlock).',
+        pin: 'LOCK PIN (4–8 DIGITS, OPTIONAL)',
+        s7Title: '7. Design and Brightness',
+        s7Sub: 'Customize color palette, light/dark mode, brightness, volume, silent mode, and Do Not Disturb.',
         light: 'Light',
         dark: 'Dark',
         bright: 'Brightness',
-        s5Title: 'All set',
-        s5Sub: 'Your preferences will be stored locally in this browser.',
+        volume: 'System Volume',
+        silentRow: 'Silent',
+        dndRow: 'Do Not Disturb',
+        s8Title: '8. Summary',
+        s8Sub: 'Review your configuration before finalizing setup.',
+        s9Title: '…processing…',
+        s9Sub: 'Preparing system preferences, keyboard, theme, and account.',
         prev: 'Back',
         next: 'Next',
-        finish: 'Finish setup',
+        finish: 'Finish & Apply',
         on: 'On',
         off: 'Off'
       },
       fr: {
         step: (c, t) => `ÉTAPE ${c} SUR ${t}`,
-        s1Title: 'Bienvenue sur Android',
-        s1Sub: 'Choisissez la langue, le profil et le style — ou importez une sauvegarde JSON.',
-        lang: 'LANGUE',
-        user: 'NOM D’UTILISATEUR',
-        device: 'NOM DE L’APPAREIL',
+        wTitle: 'Bienvenue',
+        wSub: 'Configurez votre appareil en quelques étapes : clavier virtuel, thème, compte et sécurité.',
+        wStart: 'Démarrer',
         importTitle: 'Importer une sauvegarde (JSON)',
         importDesc: 'Restaurer un fichier d’état système exporté.',
         importBtn: 'Choisir JSON',
         importOk: 'Sauvegarde importée ! Redirection…',
         importErr: 'Fichier JSON invalide.',
-        s2Title: 'Connexions & Verrouillage',
-        s2Sub: 'Définissez les connexions et un code PIN facultatif.',
+        s1Title: '1. Langue et région',
+        s1Sub: 'Choisissez la langue du système et la région.',
+        lang: 'LANGUE',
+        region: 'RÉGION',
+        s2Title: '2. Wi-Fi et données mobiles',
+        s2Sub: 'Configurez votre connexion Wi-Fi et réseau mobile.',
         wifiRow: 'Wi-Fi',
-        dndRow: 'Ne pas déranger',
-        pin: 'CODE PIN FACULTATIF (4–8 CHIFFRES)',
-        s3Title: 'Palette Material You',
-        s3Sub: 'Choisissez une couleur d’accentuation pour le système.',
-        s4Title: 'Affichage & Mode',
-        s4Sub: 'Choisissez le mode clair ou sombre et la luminosité.',
+        wifiSsid: 'NOM DU RÉSEAU WI-FI (SSID)',
+        mobileRow: 'Données mobiles (5G)',
+        s3Title: '3. Nom de l’appareil et utilisateur',
+        s3Sub: 'Définissez votre nom d’utilisateur et celui de l’appareil.',
+        user: 'NOM D’UTILISATEUR',
+        device: 'NOM DE L’APPAREIL',
+        s4Title: '4. On Screen Keyboard',
+        s4Sub: 'Activez le clavier virtuel Gboard et choisissez la disposition.',
+        oskRow: 'Clavier à l’écran (Gboard OSK)',
+        oskSub: 'Afficher automatiquement lors de la saisie',
+        oskLayout: 'DISPOSITION DU CLAVIER',
+        oskTest: 'TESTER LE CLAVIER ICI',
+        s5Title: '5. Compte Google',
+        s5Sub: 'Associez votre compte Google pour Drive, Photos et Contacts.',
+        gaActive: 'Synchronisation du compte',
+        gaName: 'NOM DU COMPTE',
+        gaEmail: 'ADRESSE E-MAIL',
+        s6Title: '6. Verrouillage de l’écran',
+        s6Sub: 'Définissez un code PIN à 4–8 chiffres (facultatif).',
+        pin: 'CODE PIN (4–8 CHIFFRES, FACULTATIF)',
+        s7Title: '7. Design et luminosité',
+        s7Sub: 'Choisissez le thème, la luminosité, le volume, le mode silencieux et Ne pas déranger.',
         light: 'Clair',
         dark: 'Sombre',
         bright: 'Luminosité',
-        s5Title: 'Tout est prêt',
-        s5Sub: 'Vos préférences sont enregistrées localement.',
+        volume: 'Volume système',
+        silentRow: 'Silencieux',
+        dndRow: 'Ne pas déranger',
+        s8Title: '8. Résumé',
+        s8Sub: 'Vérifiez vos paramètres avant l’application.',
+        s9Title: '…traitement en cours…',
+        s9Sub: 'Préparation du système, du clavier et de votre profil.',
         prev: 'Retour',
         next: 'Suivant',
         finish: 'Terminer',
@@ -401,30 +697,53 @@
       },
       es: {
         step: (c, t) => `PASO ${c} DE ${t}`,
-        s1Title: 'Te damos la bienvenida a Android',
-        s1Sub: 'Configura idioma, perfil y diseño, o importa una copia de seguridad JSON.',
-        lang: 'IDIOMA',
-        user: 'NOMBRE DE USUARIO',
-        device: 'NOMBRE DEL DISPOSITIVO',
+        wTitle: 'Bienvenido',
+        wSub: 'Configura tu dispositivo en pocos pasos: teclado en pantalla, diseño, cuenta y bloqueo.',
+        wStart: 'Comenzar',
         importTitle: 'Importar copia (JSON)',
         importDesc: 'Restaura un archivo de estado del sistema exportado.',
         importBtn: 'Elegir JSON',
         importOk: '¡Copia importada! Redirigiendo…',
         importErr: 'Archivo JSON no válido.',
-        s2Title: 'Conexiones y bloqueo',
-        s2Sub: 'Elige conexiones y un PIN opcional.',
+        s1Title: '1. Idioma y región',
+        s1Sub: 'Elige el idioma y la región del sistema.',
+        lang: 'IDIOMA',
+        region: 'REGIÓN',
+        s2Title: '2. Wi-Fi y datos móviles',
+        s2Sub: 'Configura tu red Wi-Fi y conexión móvil.',
         wifiRow: 'Wi-Fi',
-        dndRow: 'No molestar',
-        pin: 'PIN OPCIONAL (4–8 DÍGITOS)',
-        s3Title: 'Paleta Material You',
-        s3Sub: 'Elige un color de acento para el sistema.',
-        s4Title: 'Pantalla y modo',
-        s4Sub: 'Elige modo claro u oscuro y brillo predeterminado.',
+        wifiSsid: 'NOMBRE DE RED WI-FI (SSID)',
+        mobileRow: 'Datos móviles (5G)',
+        s3Title: '3. Nombre del dispositivo y usuario',
+        s3Sub: 'Define tu nombre de usuario y el del dispositivo.',
+        user: 'NOMBRE DE USUARIO',
+        device: 'NOMBRE DEL DISPOSITIVO',
+        s4Title: '4. On Screen Keyboard',
+        s4Sub: 'Activa el teclado en pantalla Gboard y elige la distribución.',
+        oskRow: 'Teclado en pantalla (Gboard OSK)',
+        oskSub: 'Mostrar automáticamente al enfocar campos de texto',
+        oskLayout: 'DISTRIBUCIÓN DE TECLADO',
+        oskTest: 'PROBAR TECLADO AQUÍ',
+        s5Title: '5. Cuenta de Google',
+        s5Sub: 'Vincula tu cuenta de Google para Drive, Fotos y Contactos.',
+        gaActive: 'Sincronización de cuenta',
+        gaName: 'NOMBRE DE CUENTA',
+        gaEmail: 'CORREO ELECTRÓNICO',
+        s6Title: '6. Bloqueo de pantalla',
+        s6Sub: 'Protege el dispositivo con un PIN de 4–8 dígitos (opcional).',
+        pin: 'PIN DE BLOQUEO (4–8 DÍGITOS, OPCIONAL)',
+        s7Title: '7. Diseño y brillo',
+        s7Sub: 'Ajusta tema, brillo, volumen, silencio y No molestar.',
         light: 'Claro',
         dark: 'Oscuro',
         bright: 'Brillo',
-        s5Title: 'Todo listo',
-        s5Sub: 'Tu configuración se guardará localmente en el navegador.',
+        volume: 'Volumen del sistema',
+        silentRow: 'Silencio',
+        dndRow: 'No molestar',
+        s8Title: '8. Resumen',
+        s8Sub: 'Revisa tu configuración antes de aplicarla.',
+        s9Title: '…procesando…',
+        s9Sub: 'Preparando sistema, teclado, tema y cuenta.',
         prev: 'Atrás',
         next: 'Siguiente',
         finish: 'Finalizar',
@@ -433,40 +752,65 @@
       },
       ja: {
         step: (c, t) => `ステップ ${c} / ${t}`,
-        s1Title: 'Android へようこそ',
-        s1Sub: '言語・プロフィール・テーマを設定するか、JSONバックアップを読み込みます。',
-        lang: '言語',
-        user: 'ユーザー名',
-        device: 'デバイス名',
+        wTitle: 'ようこそ',
+        wSub: '画面キーボード、デザイン、アカウント、ロック画面を数ステップで設定します。',
+        wStart: 'セットアップを開始',
         importTitle: 'バックアップを読み込み (JSON)',
         importDesc: '書き出したシステム状態ファイルを復元します。',
         importBtn: 'JSONを選択',
         importOk: 'バックアップを読み込みました。ロック画面へ移動します…',
         importErr: '無効なJSONファイルです。',
-        s2Title: '接続とロック',
-        s2Sub: '通信設定と任意のロックPINを設定します。',
+        s1Title: '1. 言語と地域',
+        s1Sub: 'システム言語と地域を選択します。',
+        lang: '言語',
+        region: '地域',
+        s2Title: '2. Wi-Fi とモバイル',
+        s2Sub: 'Wi-Fiネットワークとモバイルデータ通信を設定します。',
         wifiRow: 'Wi-Fi',
-        dndRow: 'マナーモード',
-        pin: '任意のロックPIN (4〜8桁)',
-        s3Title: 'Material You カラー',
-        s3Sub: 'システム全体のアクセントカラーを選択します。',
-        s4Title: 'ディスプレイとテーマ',
-        s4Sub: 'ライト/ダークモードと明るさを選択します。',
+        wifiSsid: 'WI-FI ネットワーク名 (SSID)',
+        mobileRow: 'モバイルデータ (5G)',
+        s3Title: '3. デバイス名とユーザー名',
+        s3Sub: 'ユーザー名とデバイス名を設定します。',
+        user: 'ユーザー名',
+        device: 'デバイス名',
+        s4Title: '4. On Screen Keyboard',
+        s4Sub: 'Gboard 画面キーボードを有効化し、配列を選択します。',
+        oskRow: '画面キーボード (Gboard OSK)',
+        oskSub: '入力欄フォーカス時に自動表示',
+        oskLayout: 'キーボード配列',
+        oskTest: 'ここでキーボードを試す',
+        s5Title: '5. Google アカウント',
+        s5Sub: 'Drive、フォト、連絡先の同期用アカウントを設定します。',
+        gaActive: 'アカウント同期',
+        gaName: 'アカウント名',
+        gaEmail: 'メールアドレス',
+        s6Title: '6. 画面ロック',
+        s6Sub: '4〜8桁のPINを設定します（空欄でスワイプ解除）。',
+        pin: 'ロックPIN (4〜8桁・任意)',
+        s7Title: '7. デザインと明るさ',
+        s7Sub: 'テーマ、明るさ、音量、サイレント、マナーモードを調整します。',
         light: 'ライト',
         dark: 'ダーク',
         bright: '明るさ',
-        s5Title: '設定完了',
-        s5Sub: '設定はこのブラウザにローカル保存されます。',
+        volume: 'システム音量',
+        silentRow: 'サイレント',
+        dndRow: 'マナーモード',
+        s8Title: '8. 概要',
+        s8Sub: '設定内容を確認して完了します。',
+        s9Title: '…処理中…',
+        s9Sub: 'システム設定・キーボード・テーマ・アカウントを準備しています。',
         prev: '戻る',
         next: '次へ',
-        finish: '完了',
+        finish: '設定を適用',
         on: 'オン',
         off: 'オフ'
       }
     };
 
-    const TOTAL_STEPS = 5;
+    // Screen 0 = Willkommensscreen, Steps 1..9 = gewünschte 9 Schritte
+    const NUMBERED_STEPS = 9;
     let currentStep = 0;
+    let processingTimer = null;
 
     function getTx() {
       const lang = AndroidOS.normalizeLang(document.getElementById('oobe-lang').value);
@@ -475,33 +819,66 @@
 
     function applyOobeTranslations() {
       const tx = getTx();
-      document.getElementById('step-counter').textContent = tx.step(currentStep + 1, TOTAL_STEPS);
-      document.getElementById('t-s1-title').textContent = tx.s1Title;
-      document.getElementById('t-s1-sub').textContent = tx.s1Sub;
-      document.getElementById('lbl-lang').textContent = tx.lang;
-      document.getElementById('lbl-user').textContent = tx.user;
-      document.getElementById('lbl-device').textContent = tx.device;
+      const stepNum = Math.min(NUMBERED_STEPS, Math.max(1, currentStep));
+      document.getElementById('step-counter').textContent = tx.step(stepNum, NUMBERED_STEPS);
+
+      document.getElementById('t-w-title').textContent = tx.wTitle;
+      document.getElementById('t-w-sub').textContent = tx.wSub;
+      document.getElementById('t-w-start').textContent = tx.wStart;
       document.getElementById('lbl-import-title').textContent = tx.importTitle;
       document.getElementById('lbl-import-desc').textContent = tx.importDesc;
       document.getElementById('lbl-import-btn').textContent = tx.importBtn;
+
+      document.getElementById('t-s1-title').textContent = tx.s1Title;
+      document.getElementById('t-s1-sub').textContent = tx.s1Sub;
+      document.getElementById('lbl-lang').textContent = tx.lang;
+      document.getElementById('lbl-region').textContent = tx.region;
+
       document.getElementById('t-s2-title').textContent = tx.s2Title;
       document.getElementById('t-s2-sub').textContent = tx.s2Sub;
       document.getElementById('lbl-wifi-row').textContent = tx.wifiRow;
-      document.getElementById('lbl-dnd-row').textContent = tx.dndRow;
-      document.getElementById('lbl-pin').textContent = tx.pin;
+      document.getElementById('lbl-wifi-ssid').textContent = tx.wifiSsid;
+      document.getElementById('lbl-mobile-row').textContent = tx.mobileRow;
+
       document.getElementById('t-s3-title').textContent = tx.s3Title;
       document.getElementById('t-s3-sub').textContent = tx.s3Sub;
+      document.getElementById('lbl-user').textContent = tx.user;
+      document.getElementById('lbl-device').textContent = tx.device;
+
       document.getElementById('t-s4-title').textContent = tx.s4Title;
       document.getElementById('t-s4-sub').textContent = tx.s4Sub;
+      document.getElementById('lbl-osk-row').textContent = tx.oskRow;
+      document.getElementById('lbl-osk-sub').textContent = tx.oskSub;
+      document.getElementById('lbl-osk-layout').textContent = tx.oskLayout;
+      document.getElementById('lbl-osk-test').textContent = tx.oskTest;
+
+      document.getElementById('t-s5-title').textContent = tx.s5Title;
+      document.getElementById('t-s5-sub').textContent = tx.s5Sub;
+      document.getElementById('lbl-ga-active').textContent = tx.gaActive;
+      document.getElementById('lbl-ga-name').textContent = tx.gaName;
+      document.getElementById('lbl-ga-email').textContent = tx.gaEmail;
+
+      document.getElementById('t-s6-title').textContent = tx.s6Title;
+      document.getElementById('t-s6-sub').textContent = tx.s6Sub;
+      document.getElementById('lbl-pin').textContent = tx.pin;
+
+      document.getElementById('t-s7-title').textContent = tx.s7Title;
+      document.getElementById('t-s7-sub').textContent = tx.s7Sub;
       document.getElementById('lbl-light').textContent = tx.light;
       document.getElementById('lbl-dark').textContent = tx.dark;
       document.getElementById('lbl-bright').textContent = tx.bright;
-      document.getElementById('t-s5-title').textContent = tx.s5Title;
-      document.getElementById('t-s5-sub').textContent = tx.s5Sub;
-      document.getElementById('lbl-prev').textContent = tx.prev;
+      document.getElementById('lbl-volume').textContent = tx.volume;
+      document.getElementById('lbl-silent-row').textContent = tx.silentRow;
+      document.getElementById('lbl-dnd-row').textContent = tx.dndRow;
 
-      const isLast = currentStep === TOTAL_STEPS - 1;
-      document.getElementById('next-label').textContent = isLast ? tx.finish : tx.next;
+      document.getElementById('t-s8-title').textContent = tx.s8Title;
+      document.getElementById('t-s8-sub').textContent = tx.s8Sub;
+      document.getElementById('t-s9-title').textContent = tx.s9Title;
+      document.getElementById('t-s9-sub').textContent = tx.s9Sub;
+
+      document.getElementById('lbl-prev').textContent = tx.prev;
+      const isSummary = currentStep === 8;
+      document.getElementById('next-label').textContent = isSummary ? tx.finish : tx.next;
       refreshControls();
     }
 
@@ -513,30 +890,58 @@
 
     function initFromState() {
       const st = AndroidOS.getState();
+      const ga = st.googleAccount || {};
       document.getElementById('oobe-lang').value = AndroidOS.getLang(st);
+      document.getElementById('oobe-region').value = st.region || 'DE';
+      document.getElementById('oobe-wifi-ssid').value = st.wifiNetwork || 'Pixel-Home-5G';
       document.getElementById('oobe-username').value = st.userName || 'Guest';
       document.getElementById('oobe-devicename').value = st.deviceName || 'Pixel 10';
+      document.getElementById('oobe-ga-name').value = ga.name || st.userName || 'Guest User';
+      document.getElementById('oobe-ga-email').value = ga.email || 'guest.user@example.com';
       document.getElementById('oobe-pin').value = st.lockPin || '';
       document.getElementById('oobe-bright').value = st.brightness || 100;
+      document.getElementById('oobe-vol').value = st.silent ? 0 : (st.volume ?? 75);
       applyOobeTranslations();
     }
 
     function refreshControls() {
       const st = AndroidOS.getState();
       const tx = getTx();
+      const ga = st.googleAccount || {};
 
       const wifiBtn = document.getElementById('btn-wifi');
+      const mobileBtn = document.getElementById('btn-mobile');
       const btBtn = document.getElementById('btn-bt');
+      const oskBtn = document.getElementById('btn-oobe-osk');
+      const gaBtn = document.getElementById('btn-ga-signedin');
+      const silentBtn = document.getElementById('btn-silent');
       const dndBtn = document.getElementById('btn-dnd');
 
       wifiBtn.textContent = st.wifi ? tx.on : tx.off;
       wifiBtn.classList.toggle('active', !!st.wifi);
 
+      mobileBtn.textContent = st.mobileData ? tx.on : tx.off;
+      mobileBtn.classList.toggle('active', !!st.mobileData);
+
       btBtn.textContent = st.bluetooth ? tx.on : tx.off;
       btBtn.classList.toggle('active', !!st.bluetooth);
 
+      oskBtn.textContent = st.oskEnabled ? tx.on : tx.off;
+      oskBtn.classList.toggle('active', !!st.oskEnabled);
+
+      gaBtn.textContent = ga.signedIn !== false ? tx.on : tx.off;
+      gaBtn.classList.toggle('active', ga.signedIn !== false);
+
+      silentBtn.textContent = st.silent ? tx.on : tx.off;
+      silentBtn.classList.toggle('active', !!st.silent);
+
       dndBtn.textContent = st.dnd ? tx.on : tx.off;
       dndBtn.classList.toggle('active', !!st.dnd);
+
+      const curLayout = AndroidOS.getOskLayout(st);
+      document.querySelectorAll('[data-layout]').forEach(card => {
+        card.classList.toggle('active', card.dataset.layout === curLayout);
+      });
 
       document.querySelectorAll('#oobe-themes .option-card').forEach(card => {
         card.classList.toggle('active', card.dataset.val === st.theme);
@@ -545,21 +950,41 @@
       document.getElementById('mode-light-card').classList.toggle('active', st.mode === 'light');
       document.getElementById('mode-dark-card').classList.toggle('active', st.mode === 'dark');
       document.getElementById('oobe-bright-val').textContent = `${st.brightness || 100} %`;
+
+      const effectiveVol = st.silent ? 0 : (st.volume ?? 75);
+      document.getElementById('oobe-vol').value = effectiveVol;
+      document.getElementById('oobe-vol-val').textContent = st.silent ? `${tx.silentRow} (0 %)` : `${effectiveVol} %`;
     }
 
     function saveStepInputs() {
       const lang = AndroidOS.normalizeLang(document.getElementById('oobe-lang').value);
+      const region = document.getElementById('oobe-region').value || 'DE';
+      const ssid = document.getElementById('oobe-wifi-ssid').value.trim() || 'Pixel-Home-5G';
       const uName = document.getElementById('oobe-username').value.trim() || 'Guest';
       const dName = document.getElementById('oobe-devicename').value.trim() || 'Pixel 10';
+      const gaName = document.getElementById('oobe-ga-name').value.trim() || uName;
+      const gaEmail = document.getElementById('oobe-ga-email').value.trim() || 'guest.user@example.com';
       const pinVal = document.getElementById('oobe-pin').value.replace(/\D/g, '').slice(0, 8);
       const bright = Number(document.getElementById('oobe-bright').value) || 100;
+      const vol = Number(document.getElementById('oobe-vol').value);
 
       AndroidOS.updateState(s => {
         s.language = lang;
+        s.region = region;
+        s.wifiNetwork = ssid;
         s.userName = uName;
         s.deviceName = dName;
         s.lockPin = pinVal;
         s.brightness = bright;
+        if (!Number.isNaN(vol)) {
+          s.volume = vol;
+          s.silent = vol === 0;
+        }
+        s.googleAccount = {
+          ...(s.googleAccount || {}),
+          name: gaName,
+          email: gaEmail
+        };
       });
     }
 
@@ -591,6 +1016,42 @@
       refreshControls();
     }
 
+    function toggleOobeOsk() {
+      const cur = AndroidOS.isOskEnabled();
+      const next = AndroidOS.setOskEnabled(!cur);
+      refreshControls();
+      if (next) {
+        const testInput = document.getElementById('oobe-osk-test');
+        if (testInput) {
+          testInput.focus();
+          AndroidOS.openOsk(testInput);
+        }
+      }
+    }
+
+    function pickOskLayout(layout) {
+      AndroidOS.setOskLayout(layout);
+      refreshControls();
+    }
+
+    function toggleOobeGoogleSignedIn() {
+      AndroidOS.updateState(s => {
+        s.googleAccount = s.googleAccount || {};
+        s.googleAccount.signedIn = s.googleAccount.signedIn === false;
+      });
+      refreshControls();
+    }
+
+    function toggleOobeSilent() {
+      AndroidOS.updateState(s => {
+        s.silent = !s.silent;
+        if (!s.silent && (s.volume === 0 || s.volume === undefined)) {
+          s.volume = 60;
+        }
+      });
+      refreshControls();
+    }
+
     function pickTheme(theme) {
       AndroidOS.updateState(s => { s.theme = theme; });
       refreshControls();
@@ -606,31 +1067,92 @@
       refreshControls();
     });
 
+    document.getElementById('oobe-vol').addEventListener('input', (e) => {
+      const val = Number(e.target.value);
+      AndroidOS.updateState(s => {
+        s.volume = val;
+        s.silent = val === 0;
+      });
+      refreshControls();
+    });
+
     function renderSummary() {
       const st = AndroidOS.getState();
+      const tx = getTx();
+      const ga = st.googleAccount || {};
       document.getElementById('oobe-summary').innerHTML = `
         <div class="summary-item">
-          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">USER</div>
-          <div style="font-weight:700;">${st.userName}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">1. SPRACHE & REGION</div>
+          <div style="font-weight:700;">${st.language.toUpperCase()} · ${st.region || 'DE'}</div>
         </div>
         <div class="summary-item">
-          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">DEVICE</div>
-          <div style="font-weight:700;">${st.deviceName}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">2. WLAN & MOBILE</div>
+          <div style="font-weight:700;">${st.wifi ? (st.wifiNetwork || 'WLAN') : tx.off} · 5G: ${st.mobileData ? tx.on : tx.off}</div>
         </div>
         <div class="summary-item">
-          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">LANGUAGE & THEME</div>
-          <div style="font-weight:700;">${st.language.toUpperCase()} · ${st.theme} (${st.mode})</div>
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">3. GERÄT & BENUTZER</div>
+          <div style="font-weight:700;">${st.userName} · ${st.deviceName}</div>
         </div>
         <div class="summary-item">
-          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">LOCK PIN</div>
-          <div style="font-weight:700;">${st.lockPin ? '••••' : 'None'}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">4. ON SCREEN KEYBOARD</div>
+          <div style="font-weight:700;">${st.oskEnabled ? `${tx.on} (${AndroidOS.getOskLayout(st).toUpperCase()})` : tx.off}</div>
+        </div>
+        <div class="summary-item">
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">5. GOOGLE-KONTO</div>
+          <div style="font-weight:700;">${ga.signedIn !== false ? (ga.email || ga.name) : tx.off}</div>
+        </div>
+        <div class="summary-item">
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">6. BILDSCHIRMSPERRE</div>
+          <div style="font-weight:700;">${st.lockPin ? 'PIN aktiviert (••••)' : 'Ohne PIN'}</div>
+        </div>
+        <div class="summary-item">
+          <div style="font-size:11px;font-weight:700;color:var(--md-sys-color-primary);">7. DESIGN & AUDIO</div>
+          <div style="font-weight:700;">${st.theme} (${st.mode}) · ${st.brightness}% · ${st.silent ? tx.silentRow : `${st.volume ?? 75}%`}${st.dnd ? ' · DND' : ''}</div>
         </div>
       `;
     }
 
+    function runProcessingStep() {
+      if (typeof AndroidOS.closeOsk === 'function') AndroidOS.closeOsk();
+      const bar = document.getElementById('oobe-proc-bar');
+      const status = document.getElementById('oobe-proc-status');
+      const stages = [
+        { pct: 28, text: 'Sprache, Region & WLAN werden gespeichert…' },
+        { pct: 56, text: 'On Screen Keyboard & Google-Konto werden verknüpft…' },
+        { pct: 84, text: 'Material You Design, Helligkeit & Audio werden angewendet…' },
+        { pct: 100, text: 'Fertig! Sperrbildschirm wird gestartet…' }
+      ];
+      let idx = 0;
+      bar.style.width = '12%';
+      clearInterval(processingTimer);
+      processingTimer = setInterval(() => {
+        if (idx < stages.length) {
+          bar.style.width = `${stages[idx].pct}%`;
+          status.textContent = stages[idx].text;
+          idx++;
+        } else {
+          clearInterval(processingTimer);
+          AndroidOS.updateState(s => {
+            s.hasData = true;
+            s.oobeCompleted = true;
+            s.poweredOff = false;
+            s.locked = true;
+          });
+          window.location.href = 'lockscreen.html';
+        }
+      }, 620);
+    }
+
     function renderStep() {
-      document.getElementById('stepper').innerHTML = Array.from({ length: TOTAL_STEPS }, (_, i) =>
-        `<div class="step-seg ${i <= currentStep ? 'done' : ''}"></div>`
+      if (typeof AndroidOS.closeOsk === 'function') AndroidOS.closeOsk();
+      const isWelcome = currentStep === 0;
+      const isProcessing = currentStep === 9;
+
+      document.getElementById('oobe-progress-header').style.display = (isWelcome || isProcessing) ? 'none' : 'block';
+      document.getElementById('oobe-footer').style.display = (isWelcome || isProcessing) ? 'none' : 'flex';
+
+      document.getElementById('stepper').innerHTML = Array.from({ length: NUMBERED_STEPS }, (_, i) =>
+        `<div class="step-seg ${(i + 1) <= currentStep ? 'done' : ''}"></div>`
       ).join('');
 
       document.querySelectorAll('.step-panel').forEach((panel, idx) => {
@@ -638,30 +1160,23 @@
       });
 
       document.getElementById('prev-btn').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
-      const isLast = currentStep === TOTAL_STEPS - 1;
-      document.getElementById('next-icon').textContent = isLast ? 'check' : 'arrow_forward';
+      document.getElementById('next-icon').textContent = currentStep === 8 ? 'check' : 'arrow_forward';
 
       applyOobeTranslations();
-      if (isLast) renderSummary();
+      if (currentStep === 8) renderSummary();
+      if (currentStep === 9) runProcessingStep();
     }
 
     function nextStep() {
       saveStepInputs();
-      if (currentStep < TOTAL_STEPS - 1) {
+      if (currentStep < 9) {
         currentStep++;
         renderStep();
-      } else {
-        AndroidOS.updateState(s => {
-          s.hasData = true;
-          s.oobeCompleted = true;
-          s.poweredOff = false;
-          s.locked = true;
-        });
-        window.location.href = 'lockscreen.html';
       }
     }
 
     function prevStep() {
+      clearInterval(processingTimer);
       saveStepInputs();
       if (currentStep > 0) {
         currentStep--;
