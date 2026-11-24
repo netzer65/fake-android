@@ -8,15 +8,46 @@ const AndroidOS = (() => {
     charging: false
   };
 
+  let qsEditMode = false;
+  let qsDragIndex = null;
+
+  const DEFAULT_QS_TILES = ['wifi', 'mobile', 'dark', 'dnd', 'silent', 'bluetooth', 'osk', 'calculator'];
+
+  const QS_TILE_CATALOG = {
+    wifi: { icon: 'wifi', labelKey: 'wifi', type: 'toggle', stateKey: 'wifi' },
+    mobile: { icon: 'signal_cellular_alt', labelKey: 'mobileData', type: 'toggle', stateKey: 'mobileData' },
+    dark: { icon: 'dark_mode', labelKey: 'darkMode', type: 'mode' },
+    dnd: { icon: 'do_not_disturb_on', labelKey: 'dnd', type: 'toggle', stateKey: 'dnd' },
+    silent: { icon: 'volume_off', labelKey: 'silentMode', type: 'toggle', stateKey: 'silent' },
+    bluetooth: { icon: 'bluetooth', labelKey: 'bluetooth', type: 'toggle', stateKey: 'bluetooth' },
+    osk: { icon: 'keyboard', labelKey: 'oskTile', type: 'osk' },
+    calculator: { icon: 'calculate', labelKey: 'calculator', type: 'link', href: 'rechner.html' },
+    camera: { icon: 'photo_camera', labelKey: 'camera', type: 'link', href: 'kamera.html' },
+    notes: { icon: 'edit_note', labelKey: 'notes', type: 'link', href: 'notizen.html' },
+    clock: { icon: 'schedule', labelKey: 'clock', type: 'link', href: 'uhr.html' },
+    settings: { icon: 'settings', labelKey: 'settings', type: 'link', href: 'einstellungen.html' }
+  };
+
   const I18N = {
     de: {
       locale: 'de-DE',
       osName: 'Android 16',
       quickSettings: 'Schnelleinstellungen',
+      editTiles: 'Kacheln bearbeiten',
+      doneEditing: 'Fertig',
+      resetTiles: 'Standard',
+      availableTiles: 'Verfügbare Kacheln (Tippen zum Hinzufügen)',
       wifi: 'WLAN',
+      mobileData: 'Mobile Daten',
       darkMode: 'Dunkelmodus',
       dnd: 'Nicht stören',
+      silentMode: 'Lautlos',
+      bluetooth: 'Bluetooth',
+      oskTile: 'Tastatur',
       calculator: 'Rechner',
+      camera: 'Kamera',
+      notes: 'Notizen',
+      clock: 'Uhr',
       settings: 'Einstellungen',
       lockScreen: 'Bildschirm sperren',
       unlock: 'Entsperren',
@@ -40,11 +71,11 @@ const AndroidOS = (() => {
       notifTitle: 'Benachrichtigungen',
       notifSub: 'Benachrichtigungsverlauf, Unterhaltungen',
       soundTitle: 'Ton und Vibration',
-      soundSub: 'Lautstärke und Haptik',
+      soundSub: 'Lautstärke, Lautlos und Haptik',
       modesTitle: 'Modi',
       modesSub: 'Nicht stören, Nachtruhe, Fahren',
       displayTitle: 'Display und Touch',
-      displaySub: 'Dunkelmodus, Schriftgröße, Touch',
+      displaySub: 'Dunkelmodus, Helligkeit, Touch',
       styleTitle: 'Hintergrundbild und Stil',
       styleSub: 'Farben, thematische Symbole, App-Raster',
       batteryTitle: 'Akku',
@@ -54,7 +85,7 @@ const AndroidOS = (() => {
       familyTitle: 'Family Link',
       familySub: (active, limit) => active ? `Aktiv · Tageslimit ${limit} Min.` : 'Verwaltet · Bildschirmzeit & App-Limits',
       systemTitle: 'System & Sicherung',
-      systemSub: 'Sprache, PIN, Tastatur, Backup, Neustart & Ausschalten',
+      systemSub: 'Sprache, Region, PIN, Tastatur, Backup & Neustart',
       oskTitle: 'Bildschirmtastatur (Gboard-OSK)',
       oskSub: 'Virtuelle Tastatur bei Fokus auf Textfeldern einblenden',
       saved: 'Gespeichert.'
@@ -63,10 +94,21 @@ const AndroidOS = (() => {
       locale: 'en-US',
       osName: 'Android 16',
       quickSettings: 'Quick Settings',
+      editTiles: 'Edit tiles',
+      doneEditing: 'Done',
+      resetTiles: 'Reset',
+      availableTiles: 'Available tiles (tap to add)',
       wifi: 'Wi-Fi',
+      mobileData: 'Mobile data',
       darkMode: 'Dark theme',
       dnd: 'Do Not Disturb',
+      silentMode: 'Silent',
+      bluetooth: 'Bluetooth',
+      oskTile: 'Keyboard',
       calculator: 'Calculator',
+      camera: 'Camera',
+      notes: 'Notes',
+      clock: 'Clock',
       settings: 'Settings',
       lockScreen: 'Lock screen',
       unlock: 'Unlock',
@@ -90,11 +132,11 @@ const AndroidOS = (() => {
       notifTitle: 'Notifications',
       notifSub: 'Notification history, conversations',
       soundTitle: 'Sound and vibration',
-      soundSub: 'Volume and haptics',
+      soundSub: 'Volume, silent mode and haptics',
       modesTitle: 'Modes',
       modesSub: 'Do Not Disturb, Bedtime, Driving',
       displayTitle: 'Display and touch',
-      displaySub: 'Dark theme, font size, touch',
+      displaySub: 'Dark theme, brightness, touch',
       styleTitle: 'Wallpaper and style',
       styleSub: 'Colours, themed icons, app grid',
       batteryTitle: 'Battery',
@@ -104,7 +146,7 @@ const AndroidOS = (() => {
       familyTitle: 'Family Link',
       familySub: (active, limit) => active ? `Active · ${limit} min daily limit` : 'Supervised · Screen time & app limits',
       systemTitle: 'System & Backup',
-      systemSub: 'Language, PIN, keyboard, backup, restart & power off',
+      systemSub: 'Language, region, PIN, keyboard, backup & power',
       oskTitle: 'On-screen keyboard (Gboard OSK)',
       oskSub: 'Show virtual keyboard when focusing text inputs',
       saved: 'Saved.'
@@ -113,10 +155,21 @@ const AndroidOS = (() => {
       locale: 'fr-FR',
       osName: 'Android 16',
       quickSettings: 'Réglages rapides',
+      editTiles: 'Modifier les tuiles',
+      doneEditing: 'Terminé',
+      resetTiles: 'Défaut',
+      availableTiles: 'Tuiles disponibles (appuyer pour ajouter)',
       wifi: 'Wi-Fi',
+      mobileData: 'Données mobiles',
       darkMode: 'Mode sombre',
       dnd: 'Ne pas déranger',
+      silentMode: 'Silencieux',
+      bluetooth: 'Bluetooth',
+      oskTile: 'Clavier',
       calculator: 'Calculatrice',
+      camera: 'Appareil photo',
+      notes: 'Notes',
+      clock: 'Horloge',
       settings: 'Paramètres',
       lockScreen: 'Verrouiller l’écran',
       unlock: 'Déverrouiller',
@@ -140,11 +193,11 @@ const AndroidOS = (() => {
       notifTitle: 'Notifications',
       notifSub: 'Historique, conversations',
       soundTitle: 'Son et vibrations',
-      soundSub: 'Volume et retour haptique',
+      soundSub: 'Volume, silencieux et haptique',
       modesTitle: 'Modes',
       modesSub: 'Ne pas déranger, Coucher, Conduite',
       displayTitle: 'Affichage et tactile',
-      displaySub: 'Thème sombre, taille du texte, tactile',
+      displaySub: 'Thème sombre, luminosité, tactile',
       styleTitle: 'Fond d’écran et style',
       styleSub: 'Couleurs, icônes thématiques, grille',
       batteryTitle: 'Batterie',
@@ -154,7 +207,7 @@ const AndroidOS = (() => {
       familyTitle: 'Family Link',
       familySub: (active, limit) => active ? `Actif · Limite ${limit} min/j` : 'Contrôle parental · Temps d’écran et applis',
       systemTitle: 'Système et sauvegarde',
-      systemSub: 'Langue, PIN, clavier, sauvegarde, redémarrer et éteindre',
+      systemSub: 'Langue, région, PIN, clavier, sauvegarde et alimentation',
       oskTitle: 'Clavier virtuel (Gboard OSK)',
       oskSub: 'Afficher le clavier à l’écran lors de la saisie',
       saved: 'Enregistré.'
@@ -163,10 +216,21 @@ const AndroidOS = (() => {
       locale: 'es-ES',
       osName: 'Android 16',
       quickSettings: 'Ajustes rápidos',
+      editTiles: 'Editar mosaicos',
+      doneEditing: 'Listo',
+      resetTiles: 'Restablecer',
+      availableTiles: 'Mosaicos disponibles (toca para añadir)',
       wifi: 'Wi-Fi',
+      mobileData: 'Datos móviles',
       darkMode: 'Modo oscuro',
       dnd: 'No molestar',
+      silentMode: 'Silencio',
+      bluetooth: 'Bluetooth',
+      oskTile: 'Teclado',
       calculator: 'Calculadora',
+      camera: 'Cámara',
+      notes: 'Notas',
+      clock: 'Reloj',
       settings: 'Ajustes',
       lockScreen: 'Bloquear pantalla',
       unlock: 'Desbloquear',
@@ -190,11 +254,11 @@ const AndroidOS = (() => {
       notifTitle: 'Notificaciones',
       notifSub: 'Historial, conversaciones',
       soundTitle: 'Sonido y vibración',
-      soundSub: 'Volumen y vibración háptica',
+      soundSub: 'Volumen, silencio y vibración háptica',
       modesTitle: 'Modos',
       modesSub: 'No molestar, Descanso, Conducción',
       displayTitle: 'Pantalla y toque',
-      displaySub: 'Tema oscuro, tamaño de fuente, toque',
+      displaySub: 'Tema oscuro, brillo, toque',
       styleTitle: 'Fondo de pantalla y estilo',
       styleSub: 'Colores, iconos temáticos, cuadrícula',
       batteryTitle: 'Batería',
@@ -204,7 +268,7 @@ const AndroidOS = (() => {
       familyTitle: 'Family Link',
       familySub: (active, limit) => active ? `Activo · Límite ${limit} min/día` : 'Supervisión · Tiempo de pantalla y apps',
       systemTitle: 'Sistema y copia de seguridad',
-      systemSub: 'Idioma, PIN, teclado, copia, reiniciar y apagar',
+      systemSub: 'Idioma, región, PIN, teclado, copia y apagado',
       oskTitle: 'Teclado en pantalla (Gboard OSK)',
       oskSub: 'Mostrar teclado virtual al enfocar campos de texto',
       saved: 'Guardado.'
@@ -213,10 +277,21 @@ const AndroidOS = (() => {
       locale: 'ja-JP',
       osName: 'Android 16',
       quickSettings: 'クイック設定',
+      editTiles: 'タイルを編集',
+      doneEditing: '完了',
+      resetTiles: '初期状態',
+      availableTiles: '追加可能なタイル（タップで追加）',
       wifi: 'Wi-Fi',
+      mobileData: 'モバイルデータ',
       darkMode: 'ダークテーマ',
       dnd: 'マナーモード',
+      silentMode: 'サイレント',
+      bluetooth: 'Bluetooth',
+      oskTile: 'キーボード',
       calculator: '電卓',
+      camera: 'カメラ',
+      notes: 'メモ',
+      clock: '時計',
       settings: '設定',
       lockScreen: '画面をロック',
       unlock: 'ロック解除',
@@ -240,11 +315,11 @@ const AndroidOS = (() => {
       notifTitle: '通知',
       notifSub: '通知履歴、会話',
       soundTitle: '音とバイブレーション',
-      soundSub: '音量と触覚フィードバック',
+      soundSub: '音量、サイレント、触覚フィードバック',
       modesTitle: 'モード',
       modesSub: 'マナーモード、おやすみ時間、運転モード',
       displayTitle: 'ディスプレイとタッチ',
-      displaySub: 'ダークテーマ、フォントサイズ、タッチ',
+      displaySub: 'ダークテーマ、明るさ、タッチ',
       styleTitle: '壁紙とスタイル',
       styleSub: 'カラー、テーマアイコン、グリッド',
       batteryTitle: 'バッテリー',
@@ -254,7 +329,7 @@ const AndroidOS = (() => {
       familyTitle: 'ファミリー リンク',
       familySub: (active, limit) => active ? `有効 · 1日${limit}分の上限` : '管理 · スクリーンタイムとアプリ制限',
       systemTitle: 'システムとバックアップ',
-      systemSub: '言語、PIN、キーボード、バックアップ、再起動と電源オフ',
+      systemSub: '言語、地域、PIN、キーボード、バックアップと電源',
       oskTitle: '画面キーボード (Gboard OSK)',
       oskSub: '入力欄フォーカス時に仮想キーボードを表示',
       saved: '保存しました。'
@@ -270,15 +345,23 @@ const AndroidOS = (() => {
       lastUnlockedAt: 0,
       lockPin: '',
       oskEnabled: false,
+      oskLayout: 'qwertz',
       deviceName: 'Pixel 10',
       userName: 'Guest',
       language: 'de',
+      region: 'DE',
       theme: 'ocean',
       mode: 'light',
       brightness: 100,
+      volume: 75,
+      silent: false,
+      haptics: true,
       wifi: true,
+      wifiNetwork: 'Pixel-Home-5G',
+      mobileData: true,
       bluetooth: true,
       dnd: false,
+      qsTiles: [...DEFAULT_QS_TILES],
       batteryLevel: 94,
       batteryCharging: false,
       googleAccount: {
@@ -367,9 +450,13 @@ const AndroidOS = (() => {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return base;
       const parsed = JSON.parse(raw);
+      const validTiles = Array.isArray(parsed.qsTiles)
+        ? parsed.qsTiles.filter(id => Boolean(QS_TILE_CATALOG[id]))
+        : null;
       return {
         ...base,
         ...parsed,
+        qsTiles: (validTiles && validTiles.length > 0) ? validTiles : [...DEFAULT_QS_TILES],
         googleAccount: { ...base.googleAccount, ...(parsed.googleAccount || {}) },
         familyLink: { ...base.familyLink, ...(parsed.familyLink || {}) }
       };
@@ -573,7 +660,26 @@ const AndroidOS = (() => {
     if (!el) {
       el = document.createElement('div');
       el.id = 'sys-toast';
-      el.style.cssText = [        'position:fixed',        'bottom:64px',        'left:50%',        'transform:translateX(-50%) translateY(16px)',        'z-index:120',        'background:var(--md-sys-color-inverse-surface, #313033)',        'color:var(--md-sys-color-inverse-on-surface, #F4EFF4)',        'padding:11px 18px',        'border-radius:999px',        'font-family:var(--font-sans)',        'font-size:13px',        'font-weight:600',        'box-shadow:0 8px 24px rgba(0,0,0,0.28)',        'opacity:0',        'pointer-events:none',        'transition:opacity 0.22s ease, transform 0.22s ease',        'max-width:90vw',        'text-align:center'      ].join(';');
+      el.style.cssText = [
+        'position:fixed',
+        'bottom:64px',
+        'left:50%',
+        'transform:translateX(-50%) translateY(16px)',
+        'z-index:120',
+        'background:var(--md-sys-color-inverse-surface, #313033)',
+        'color:var(--md-sys-color-inverse-on-surface, #F4EFF4)',
+        'padding:11px 18px',
+        'border-radius:999px',
+        'font-family:var(--font-sans)',
+        'font-size:13px',
+        'font-weight:600',
+        'box-shadow:0 8px 24px rgba(0,0,0,0.28)',
+        'opacity:0',
+        'pointer-events:none',
+        'transition:opacity 0.22s ease, transform 0.22s ease',
+        'max-width:90vw',
+        'text-align:center'
+      ].join(';');
       document.body.appendChild(el);
     }
     el.textContent = msg;
@@ -630,6 +736,7 @@ const AndroidOS = (() => {
       const next = updateState(s => { s.dnd = !s.dnd; });
       showToast(next.dnd ? 'iOS Fokus / Nicht stören aktiviert' : 'iOS Fokus / Nicht stören deaktiviert');
       updateDynamicIsland();
+      renderQuickSettings();
     });
 
     updateDynamicIsland();
@@ -662,6 +769,14 @@ const AndroidOS = (() => {
       return;
     }
 
+    if (st.silent) {
+      titleEl.textContent = 'Lautlos aktiv';
+      badgeEl.textContent = '0%';
+      detailEl.textContent = 'Systemtöne sind stummgeschaltet.';
+      dotEl.style.background = '#FBBF24';
+      return;
+    }
+
     const bat = getBatteryInfo(st);
     titleEl.textContent = st.deviceName || 'iOS Live Pill';
     badgeEl.textContent = `${bat.level}%`;
@@ -669,7 +784,7 @@ const AndroidOS = (() => {
     dotEl.style.background = '#34D399';
   }
 
-/* === Gboard-like Optional On-Screen Keyboard Controller (QWERTZ/QWERTY/AZERTY + Long-Press) === */
+  /* === Gboard-like Optional On-Screen Keyboard Controller (QWERTZ/QWERTY/AZERTY + Long-Press) === */
   const LAYOUTS = {
     qwertz: [
       ['q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'ü'],
@@ -698,7 +813,6 @@ const AndroidOS = (() => {
     ['ABC', ',', 'SPACE', '.', 'ENTER']
   ];
 
-  // Umfassende Langtipp-Varianten inkl. Windows-1252 & ISO-8859-15 (Latin-9)
   const LONG_PRESS_MAP = {
     a: ['á', 'à', 'ä', 'â', 'å', 'ã', 'ą', 'ā', 'æ'],
     e: ['é', 'è', 'ë', 'ê', 'ē', 'ę', '€'],
@@ -774,6 +888,7 @@ const AndroidOS = (() => {
     } else if (activeInput && document.activeElement === activeInput) {
       openOsk(activeInput);
     }
+    renderQuickSettings();
     return next.oskEnabled;
   }
 
@@ -782,15 +897,21 @@ const AndroidOS = (() => {
     return LAYOUTS[lay] ? lay : 'qwertz';
   }
 
+  function setOskLayout(layout) {
+    const lay = String(layout || 'qwertz').toLowerCase();
+    if (!LAYOUTS[lay]) return;
+    updateState(s => {
+      s.oskLayout = lay;
+    });
+    hideLongPressPopover();
+    renderKeys();
+  }
+
   function cycleOskLayout() {
     const order = ['qwertz', 'qwerty', 'azerty'];
     const cur = getOskLayout();
     const nextLayout = order[(order.indexOf(cur) + 1) % order.length];
-    updateState(s => {
-      s.oskLayout = nextLayout;
-    });
-    hideLongPressPopover();
-    renderKeys();
+    setOskLayout(nextLayout);
     showToast(`Tastaturlayout: ${nextLayout.toUpperCase()}`);
   }
 
@@ -1271,7 +1392,285 @@ const AndroidOS = (() => {
       });
     }
   }
-  
+
+  /* === Quick Settings (Editable & Reorderable Tiles) === */
+  function isQsTileActive(id, st) {
+    const def = QS_TILE_CATALOG[id];
+    if (!def) return false;
+    if (def.type === 'toggle') return Boolean(st[def.stateKey]);
+    if (def.type === 'mode') return st.mode === 'dark';
+    if (def.type === 'osk') return Boolean(st.oskEnabled);
+    return false;
+  }
+
+  function handleQsTileAction(id) {
+    const def = QS_TILE_CATALOG[id];
+    if (!def) return;
+    if (def.type === 'toggle') {
+      updateState(s => { s[def.stateKey] = !s[def.stateKey]; });
+      renderQuickSettings();
+      updateDynamicIsland();
+      return;
+    }
+    if (def.type === 'mode') {
+      updateState(s => { s.mode = s.mode === 'dark' ? 'light' : 'dark'; });
+      renderQuickSettings();
+      return;
+    }
+    if (def.type === 'osk') {
+      const next = setOskEnabled(!isOskEnabled());
+      showToast(next ? 'Bildschirmtastatur (Gboard) aktiviert' : 'Bildschirmtastatur deaktiviert');
+      return;
+    }
+    if (def.type === 'link' && def.href) {
+      window.location.href = def.href;
+    }
+  }
+
+  function moveQsTile(fromIndex, toIndex) {
+    updateState(s => {
+      const arr = Array.isArray(s.qsTiles) ? [...s.qsTiles] : [...DEFAULT_QS_TILES];
+      if (fromIndex < 0 || fromIndex >= arr.length || toIndex < 0 || toIndex >= arr.length) return;
+      const [item] = arr.splice(fromIndex, 1);
+      arr.splice(toIndex, 0, item);
+      s.qsTiles = arr;
+    });
+    renderQuickSettings();
+  }
+
+  function removeQsTile(index) {
+    updateState(s => {
+      const arr = Array.isArray(s.qsTiles) ? [...s.qsTiles] : [...DEFAULT_QS_TILES];
+      if (arr.length <= 1) {
+        showToast('Mindestens eine Kachel muss aktiv bleiben.');
+        return;
+      }
+      arr.splice(index, 1);
+      s.qsTiles = arr;
+    });
+    renderQuickSettings();
+  }
+
+  function addQsTile(id) {
+    if (!QS_TILE_CATALOG[id]) return;
+    updateState(s => {
+      const arr = Array.isArray(s.qsTiles) ? [...s.qsTiles] : [...DEFAULT_QS_TILES];
+      if (!arr.includes(id)) arr.push(id);
+      s.qsTiles = arr;
+    });
+    renderQuickSettings();
+  }
+
+  function resetQsTiles() {
+    updateState(s => {
+      s.qsTiles = [...DEFAULT_QS_TILES];
+    });
+    renderQuickSettings();
+    showToast('Schnelleinstellungen zurückgesetzt');
+  }
+
+  function renderQuickSettings() {
+    const qsRoot = document.getElementById('sys-qs-root');
+    if (!qsRoot) return;
+    const st = getState();
+    const activeIds = Array.isArray(st.qsTiles) && st.qsTiles.length ? st.qsTiles : [...DEFAULT_QS_TILES];
+    const availableIds = Object.keys(QS_TILE_CATALOG).filter(id => !activeIds.includes(id));
+
+    let backdrop = document.getElementById('qs-backdrop');
+    let panel = document.getElementById('qs-panel');
+    const wasOpen = panel ? panel.classList.contains('open') : false;
+
+    if (!backdrop || !panel) {
+      qsRoot.innerHTML = `
+        <div class="qs-backdrop" id="qs-backdrop"></div>
+        <div class="qs-panel" id="qs-panel"></div>
+      `;
+      backdrop = document.getElementById('qs-backdrop');
+      panel = document.getElementById('qs-panel');
+      backdrop.addEventListener('click', () => {
+        qsEditMode = false;
+        toggleQS(false);
+      });
+    }
+
+    const tilesHtml = activeIds.map((id, idx) => {
+      const def = QS_TILE_CATALOG[id];
+      if (!def) return '';
+      const active = !qsEditMode && isQsTileActive(id, st);
+      const label = t(def.labelKey, st);
+
+      if (qsEditMode) {
+        return `
+          <div class="qs-tile editing" draggable="true" data-qs-idx="${idx}" data-qs-id="${id}">
+            <span class="qs-tile-main">
+              <span class="material-symbols-rounded" style="font-size:18px;opacity:0.7;">drag_indicator</span>
+              <span class="material-symbols-rounded">${def.icon}</span>
+              <span class="qs-tile-label">${label}</span>
+            </span>
+            <span class="qs-tile-controls">
+              <button type="button" class="qs-mini-act" data-qs-move="-1" data-qs-idx="${idx}" title="Nach oben/links" ${idx === 0 ? 'disabled style="opacity:0.35;"' : ''}>
+                <span class="material-symbols-rounded" style="font-size:16px;">arrow_upward</span>
+              </button>
+              <button type="button" class="qs-mini-act" data-qs-move="1" data-qs-idx="${idx}" title="Nach unten/rechts" ${idx === activeIds.length - 1 ? 'disabled style="opacity:0.35;"' : ''}>
+                <span class="material-symbols-rounded" style="font-size:16px;">arrow_downward</span>
+              </button>
+              <button type="button" class="qs-mini-act" data-qs-remove="${idx}" title="Entfernen">
+                <span class="material-symbols-rounded" style="font-size:16px;">close</span>
+              </button>
+            </span>
+          </div>
+        `;
+      }
+
+      return `
+        <button type="button" class="qs-tile ${active ? 'active' : ''}" data-qs-trigger="${id}">
+          <span class="qs-tile-main">
+            <span class="material-symbols-rounded">${def.icon}</span>
+            <span class="qs-tile-label">${label}</span>
+          </span>
+        </button>
+      `;
+    }).join('');
+
+    const editTrayHtml = qsEditMode ? `
+      <div class="qs-edit-tray">
+        <div class="qs-edit-tray-title">
+          <span>${t('availableTiles', st)}</span>
+          <button type="button" class="m3-chip" id="qs-reset-btn" style="padding:4px 10px;font-size:11px;">${t('resetTiles', st)}</button>
+        </div>
+        <div class="qs-pool-grid">
+          ${availableIds.length
+            ? availableIds.map(id => {
+                const def = QS_TILE_CATALOG[id];
+                return `<button type="button" class="qs-pool-chip" data-qs-add="${id}">
+                  <span class="material-symbols-rounded" style="font-size:16px;">add</span>
+                  <span class="material-symbols-rounded" style="font-size:16px;">${def.icon}</span>
+                  <span>${t(def.labelKey, st)}</span>
+                </button>`;
+              }).join('')
+            : `<span style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">Alle Kacheln sind bereits aktiv.</span>`
+          }
+        </div>
+      </div>
+    ` : '';
+
+    panel.innerHTML = `
+      <div class="qs-header">
+        <div>
+          <div id="qs-date" style="font-size:13px; color:var(--md-sys-color-on-surface-variant); font-weight:600;">${formatDate(new Date(), st)}</div>
+          <div style="font-size:12px; opacity:0.75;">${t('quickSettings', st)}</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="icon-btn ${qsEditMode ? 'active' : ''}" id="qs-edit-toggle" title="${qsEditMode ? t('doneEditing', st) : t('editTiles', st)}">
+            <span class="material-symbols-rounded">${qsEditMode ? 'check' : 'edit'}</span>
+          </button>
+          <a href="einstellungen.html" class="icon-btn" title="${t('settings', st)}">
+            <span class="material-symbols-rounded">settings</span>
+          </a>
+          <button type="button" class="icon-btn" onclick="AndroidOS.lockDevice(true)" title="${t('lockScreen', st)}">
+            <span class="material-symbols-rounded">lock</span>
+          </button>
+        </div>
+      </div>
+      <div class="qs-grid" id="qs-grid">${tilesHtml}</div>
+      <div class="qs-sliders">
+        <div class="qs-brightness">
+          <span class="material-symbols-rounded" style="font-size:20px;">brightness_medium</span>
+          <input type="range" id="qs-bright-range" min="45" max="100" value="${st.brightness || 100}">
+        </div>
+        <div class="qs-brightness">
+          <span class="material-symbols-rounded" style="font-size:20px;">${st.silent ? 'volume_off' : 'volume_up'}</span>
+          <input type="range" id="qs-vol-range" min="0" max="100" value="${st.silent ? 0 : (st.volume ?? 75)}">
+        </div>
+      </div>
+      ${editTrayHtml}
+    `;
+
+    if (wasOpen) {
+      backdrop.classList.add('open');
+      panel.classList.add('open');
+    }
+
+    document.getElementById('qs-edit-toggle').addEventListener('click', () => {
+      qsEditMode = !qsEditMode;
+      renderQuickSettings();
+    });
+
+    const resetBtn = document.getElementById('qs-reset-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', resetQsTiles);
+    }
+
+    panel.querySelectorAll('[data-qs-trigger]').forEach(btn => {
+      btn.addEventListener('click', () => handleQsTileAction(btn.dataset.qsTrigger));
+    });
+
+    panel.querySelectorAll('[data-qs-move]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = Number(btn.dataset.qsIdx);
+        const dir = Number(btn.dataset.qsMove);
+        moveQsTile(idx, idx + dir);
+      });
+    });
+
+    panel.querySelectorAll('[data-qs-remove]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeQsTile(Number(btn.dataset.qsRemove));
+      });
+    });
+
+    panel.querySelectorAll('[data-qs-add]').forEach(btn => {
+      btn.addEventListener('click', () => addQsTile(btn.dataset.qsAdd));
+    });
+
+    // Drag & Drop sorting inside Quick Settings
+    panel.querySelectorAll('.qs-tile.editing').forEach(tile => {
+      tile.addEventListener('dragstart', (e) => {
+        qsDragIndex = Number(tile.dataset.qsIdx);
+        tile.classList.add('dragging');
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(qsDragIndex));
+        }
+      });
+      tile.addEventListener('dragend', () => {
+        tile.classList.remove('dragging');
+        qsDragIndex = null;
+        panel.querySelectorAll('.qs-tile').forEach(el => el.classList.remove('drag-over'));
+      });
+      tile.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        tile.classList.add('drag-over');
+      });
+      tile.addEventListener('dragleave', () => {
+        tile.classList.remove('drag-over');
+      });
+      tile.addEventListener('drop', (e) => {
+        e.preventDefault();
+        tile.classList.remove('drag-over');
+        const targetIdx = Number(tile.dataset.qsIdx);
+        if (qsDragIndex !== null && qsDragIndex !== targetIdx) {
+          moveQsTile(qsDragIndex, targetIdx);
+        }
+      });
+    });
+
+    document.getElementById('qs-bright-range').addEventListener('input', (e) => {
+      updateState(s => { s.brightness = Number(e.target.value); });
+    });
+
+    document.getElementById('qs-vol-range').addEventListener('input', (e) => {
+      const val = Number(e.target.value);
+      updateState(s => {
+        s.volume = val;
+        s.silent = val === 0;
+      });
+      updateDynamicIsland();
+    });
+  }
+
   function mountShell(options = {}) {
     const { showGestureBar = true, isLockscreen = false, isSetup = false } = options;
     const st = getState();
@@ -1290,9 +1689,10 @@ const AndroidOS = (() => {
           </a>
         </div>
         <div class="status-right">
+          <span id="sb-silent" class="material-symbols-rounded" style="font-size:16px; display:none;">volume_off</span>
           <span id="sb-dnd" class="material-symbols-rounded" style="font-size:16px; display:none;">do_not_disturb_on</span>
           <span id="sb-wifi" class="material-symbols-rounded" style="font-size:17px;">wifi</span>
-          <span class="material-symbols-rounded" style="font-size:17px;">signal_cellular_alt</span>
+          <span id="sb-mobile" class="material-symbols-rounded" style="font-size:17px;">signal_cellular_alt</span>
           <span style="display:inline-flex;align-items:center;gap:2px;">
             <span class="material-symbols-rounded filled" style="font-size:17px;" id="sb-bat-icon">${bat.charging ? 'battery_charging_full' : 'battery_full'}</span>
             <span id="sb-bat-val">${bat.level}%</span>
@@ -1332,68 +1732,8 @@ const AndroidOS = (() => {
       });
     }
 
-    const qsRoot = document.getElementById('sys-qs-root');
-    if (qsRoot && !isSetup) {
-      qsRoot.innerHTML = `
-        <div class="qs-backdrop" id="qs-backdrop"></div>
-        <div class="qs-panel" id="qs-panel">
-          <div class="qs-header">
-            <div>
-              <div id="qs-date" style="font-size:13px; color:var(--md-sys-color-on-surface-variant); font-weight:600;"></div>
-              <div style="font-size:12px; opacity:0.75;">${t('quickSettings', st)}</div>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <a href="einstellungen.html" class="icon-btn" title="${t('settings', st)}">
-                <span class="material-symbols-rounded">settings</span>
-              </a>
-              <button class="icon-btn" onclick="AndroidOS.lockDevice(true)" title="${t('lockScreen', st)}">
-                <span class="material-symbols-rounded">lock</span>
-              </button>
-            </div>
-          </div>
-          <div class="qs-grid">
-            <button class="qs-tile ${st.wifi ? 'active' : ''}" id="qs-wifi">
-              <span class="material-symbols-rounded">wifi</span>
-              <span>${t('wifi', st)}</span>
-            </button>
-            <button class="qs-tile ${st.mode === 'dark' ? 'active' : ''}" id="qs-dark">
-              <span class="material-symbols-rounded">dark_mode</span>
-              <span>${t('darkMode', st)}</span>
-            </button>
-            <button class="qs-tile ${st.dnd ? 'active' : ''}" id="qs-dnd">
-              <span class="material-symbols-rounded">do_not_disturb_on</span>
-              <span>${t('dnd', st)}</span>
-            </button>
-            <a href="rechner.html" class="qs-tile">
-              <span class="material-symbols-rounded">calculate</span>
-              <span>${t('calculator', st)}</span>
-            </a>
-          </div>
-          <div class="qs-brightness">
-            <span class="material-symbols-rounded" style="font-size:20px;">brightness_medium</span>
-            <input type="range" id="qs-bright-range" min="45" max="100" value="${st.brightness || 100}">
-          </div>
-        </div>
-      `;
-
-      document.getElementById('qs-backdrop').addEventListener('click', () => toggleQS(false));
-      document.getElementById('qs-wifi').addEventListener('click', (e) => {
-        const next = updateState(s => { s.wifi = !s.wifi; });
-        e.currentTarget.classList.toggle('active', next.wifi);
-        refreshStatusIcons();
-      });
-      document.getElementById('qs-dark').addEventListener('click', (e) => {
-        const next = updateState(s => { s.mode = s.mode === 'dark' ? 'light' : 'dark'; });
-        e.currentTarget.classList.toggle('active', next.mode === 'dark');
-      });
-      document.getElementById('qs-dnd').addEventListener('click', (e) => {
-        const next = updateState(s => { s.dnd = !s.dnd; });
-        e.currentTarget.classList.toggle('active', next.dnd);
-        refreshStatusIcons();
-      });
-      document.getElementById('qs-bright-range').addEventListener('input', (e) => {
-        updateState(s => { s.brightness = Number(e.target.value); });
-      });
+    if (!isSetup) {
+      renderQuickSettings();
     }
 
     const navRoot = document.getElementById('sys-gesture-nav');
@@ -1412,12 +1752,16 @@ const AndroidOS = (() => {
     function refreshStatusIcons() {
       const cur = getState();
       const wifiEl = document.getElementById('sb-wifi');
+      const mobileEl = document.getElementById('sb-mobile');
       const dndEl = document.getElementById('sb-dnd');
+      const silentEl = document.getElementById('sb-silent');
       const batVal = document.getElementById('sb-bat-val');
       const batIcon = document.getElementById('sb-bat-icon');
       const bat = getBatteryInfo(cur);
       if (wifiEl) wifiEl.textContent = cur.wifi ? 'wifi' : 'wifi_off';
+      if (mobileEl) mobileEl.textContent = cur.mobileData ? 'signal_cellular_alt' : 'signal_cellular_off';
       if (dndEl) dndEl.style.display = cur.dnd ? 'inline-flex' : 'none';
+      if (silentEl) silentEl.style.display = cur.silent ? 'inline-flex' : 'none';
       if (batVal) batVal.textContent = `${bat.level}%`;
       if (batIcon) batIcon.textContent = bat.charging ? 'battery_charging_full' : 'battery_full';
     }
@@ -1445,9 +1789,7 @@ const AndroidOS = (() => {
       updateDynamicIsland();
     }
 
-    if (!isSetup) {
-      attachOskListeners();
-    }
+    attachOskListeners();
     mountDynamicIsland(isSetup);
     syncDeviceBattery(() => {
       refreshStatusIcons();
@@ -1458,6 +1800,11 @@ const AndroidOS = (() => {
   }
 
   function toggleQS(open) {
+    if (open) {
+      renderQuickSettings();
+    } else {
+      qsEditMode = false;
+    }
     const bd = document.getElementById('qs-backdrop');
     const pn = document.getElementById('qs-panel');
     if (!bd || !pn) return;
@@ -1468,6 +1815,8 @@ const AndroidOS = (() => {
   return {
     STORAGE_KEY,
     I18N,
+    DEFAULT_QS_TILES,
+    QS_TILE_CATALOG,
     createDefaultState,
     normalizeLang,
     getLang,
@@ -1496,9 +1845,12 @@ const AndroidOS = (() => {
     mountShell,
     mountDynamicIsland,
     updateDynamicIsland,
+    renderQuickSettings,
     toggleQS,
     isOskEnabled,
     setOskEnabled,
+    getOskLayout,
+    setOskLayout,
     openOsk,
     closeOsk
   };
